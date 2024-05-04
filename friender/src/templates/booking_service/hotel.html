@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Hotel | Friender{% endblock %}
+
+{% block content %}
+<div class="container py-5 h-100">
+    <div class="row bootstrap snippets bootdeys">
+        <div class="col-md-9 col-sm-7">
+            <h2>Hotel: {{hotel.name}}</h2>
+        </div>
+    </div>
+    <div class="row d-flex justify-content-center align-items-center h-100" style="margin-bottom: 20px;">
+        <div class="col col-md-9 col-lg-7 col-xl-5">
+            <div class="card" style="border-radius: 15px">
+                <div class="card-body p-4 text-black">
+                    <div>
+                        <h6 class="mb-4">{{hotel.name}}</h6>
+                        <div class="d-flex align-items-center justify-content-between mb-3">
+                            <p>Address: {{hotel.address}}</p>
+                            <p class="fw-bold mb-0">$90</p>
+                        </div>
+                    </div>
+                    <div class="d-flex align-items-center mb-4">
+                        <div class="flex-shrink-0">
+                            <img src="{% static 'img/hotel.jpeg' %}" alt="Generic placeholder image"
+                                class="img-fluid rounded-circle border border-dark border-3" style="width: 70px;">
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <div class="d-flex flex-row align-items-center mb-2">
+                                <p class="mb-0 me-2">Rating: </p>
+                                {{hotel.stars}} <i class="fas fa-star fa-xs"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <hr>
+                    <p class="my-4 pb-1">5 comments</p>
+                    <div class="container justify-content-center mt-5 border-left border-right">
+                        {% for comment in comments %}
+                        <div class="d-flex justify-content-center py-2">
+                            <div class="second py-2 px-2"> <span class="text1">{{comment.text}}</span>
+                                <div class="d-flex justify-content-between py-1 pt-2">
+                                    <div><img src="https://i.imgur.com/AgAC1Is.jpg" width="18"><span class="text2">{{comment.author}}</span></div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
