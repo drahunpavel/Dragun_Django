@@ -1,5 +1,4 @@
 # from django.shortcuts import render
-from django.http import HttpResponse
 from django.shortcuts import render
 
 
@@ -70,5 +69,6 @@ def users_template_view(request):
     return render(request=request, template_name='users.html', context={'users': users})
 
 
-def not_found_template_view():
-    return render(request=None, template_name='404.html')
+def error_404_template_view(request, exception):
+   context = {}
+   return render(request,'404.html', context)
