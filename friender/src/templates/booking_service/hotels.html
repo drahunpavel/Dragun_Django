@@ -3,64 +3,33 @@
 {% block title %}Hotels | Friender{% endblock %}
 
 {% block content %}
-<div class="container py-5 h-100">
-    <div class="row bootstrap snippets bootdeys">
-        <div class="col-md-9 col-sm-7">
-            <h2>Hotels</h2>
-        </div>
+
+<section id="team" class="team section">
+    <div class="container section-title" data-aos="fade-up">
+        <h2>Hotels</h2>
     </div>
-    {% for hotel in hotels %}
-    <div class="row d-flex justify-content-center align-items-center h-100" style="margin-bottom: 20px;">
-        <div class="col col-md-9 col-lg-7 col-xl-5">
-            <div class="card" style="border-radius: 15px">
-                <div class="card-body p-4 text-black">
-                    <div>
-                        <h6 class="mb-4">{{hotel.name}}</h6>
-                        <div class="d-flex align-items-center justify-content-between mb-3">
-                            <p>Address: {{hotel.address}}</p>
-                            <p class="fw-bold mb-0">$90</p>
-                        </div>
-                    </div>
-                    <div class="d-flex align-items-center mb-4">
-                        <div class="flex-shrink-0">
-                            <img src="{% static 'img/hotel.jpeg' %}" alt="Generic placeholder image"
-                                class="img-fluid rounded-circle border border-dark border-3" style="width: 70px;">
-                        </div>
-                        <div class="flex-grow-1 ms-3">
-                            <div class="d-flex flex-row align-items-center mb-2">
-                                <p class="mb-0 me-2">Rating: </p>
-                                {{hotel.stars}} <i class="fas fa-star fa-xs"></i>
-                                <!-- <ul class="mb-0 list-unstyled d-flex flex-row" style="color: #1B7B2C;">
-                                    <li>
-                                        <i class="fas fa-star fa-xs"></i>
-                                    </li>
-                                    <li>
-                                        <i class="fas fa-star fa-xs"></i>
-                                    </li>
-                                    <li>
-                                        <i class="fas fa-star fa-xs"></i>
-                                    </li>
-                                    <li>
-                                        <i class="fas fa-star fa-xs"></i>
-                                    </li>
-                                    <li>
-                                        <i class="fas fa-star fa-xs"></i>
-                                    </li>
-                                </ul> -->
-                            </div>
-                            <div>
-                                <a href="{% url 'Hotel' hotel.name %}">
-                                    <button type="button" data-mdb-button-init data-mdb-ripple-init
-                                        class="btn btn-outline-dark btn-rounded btn-sm" data-mdb-ripple-color="dark">See
-                                        profile</button>
-                                </a>
-                            </div>
-                        </div>
+    <div class="container">
+        <div class="row gy-4">
+            {% for hotel in hotels %}
+            <div class="col-lg-6" data-aos="fade-up" data-aos-delay="100">
+                <div class="team-member d-flex align-items-start">
+                    <div class="pic"><img src="{% static 'img/hotel.jpeg' %}" class="img-fluid" alt=""></div>
+                    <div class="member-info">
+                        <h4>{{hotel.name}}</h4>
+                        <span>Rating: {{hotel.stars}} </i></span>
+                        <p>Address: {{hotel.address}}</p>
+                        <hr/>
+                        <a href="{% url 'Hotel' hotel.name %}">
+                            <button type="button" data-mdb-button-init data-mdb-ripple-init class="btn btn-outline-dark btn-rounded btn-sm"
+                                data-mdb-ripple-color="dark">See
+                                profile</button>
+                        </a>
                     </div>
                 </div>
             </div>
+            {% endfor %}
         </div>
     </div>
-    {% endfor %}
-</div>
+</section>
+
 {% endblock %}
