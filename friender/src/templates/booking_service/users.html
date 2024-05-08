@@ -15,8 +15,11 @@
                 <div class="team-member d-flex align-items-start">
                     <div class="pic"><img src="{% static 'img/user.avif' %}" class="img-fluid" alt=""></div>
                     <div class="member-info">
-                        <h4>{{user.name}}</h4>
+                        <h4>{{user.first_name}} {{user.last_name}}</h4>
                         <span>Age: {{user.age}}</span>
+                        {% if user.email %}
+                        <p>email: {{user.email}}</p>
+                        {% endif %}
                         <!-- <p>Explicabo voluptatem mollitia et repellat qui dolorum quasi</p> -->
                         <!-- <div class="social">
                             <a href=""><i class="bi bi-twitter"></i></a>
