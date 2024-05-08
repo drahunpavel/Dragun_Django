@@ -15,7 +15,8 @@ from pathlib import Path
 from dotenv import load_dotenv
 
 # относительный путь
-dotenv_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), '..', '.env')
+dotenv_path = os.path.join(os.path.dirname(
+    os.path.dirname(__file__)), '..', '.env')
 load_dotenv(dotenv_path)
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -48,6 +49,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'debug_toolbar',
     'booking_service',
     'phonenumber_field',
     'django_extensions'
@@ -59,6 +61,7 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'debug_toolbar.middleware.DebugToolbarMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
@@ -97,8 +100,8 @@ DATABASES = {
         'NAME': os.environ.get("DB_NAME"),
         'USER': os.environ.get("DB_USER"),
         'PASSWORD': os.environ.get("DB_PASS"),
-        'HOST': os.environ.get("DB_HOST",'127.0.0.1'),
-        'PORT': os.environ.get("DB_PORT",'5432'),
+        'HOST': os.environ.get("DB_HOST", '127.0.0.1'),
+        'PORT': os.environ.get("DB_PORT", '5432'),
         # "TEST": {
         #     "NAME": "test_arrangements",
         # },
@@ -144,6 +147,10 @@ STATIC_URL = '/static/'
 
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'static'),
+]
+
+INTERNAL_IPS = [
+    "127.0.0.1",
 ]
 
 # Default primary key field type

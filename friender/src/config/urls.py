@@ -18,10 +18,10 @@ from django.contrib import admin
 from django.urls import include, path
 from django.conf.urls import handler404
 
-handler404 = 'booking_service.views.error_404_template_view' 
+handler404 = 'booking_service.views.error_404_template_view'
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('booking/', include('booking_service.urls')),
+    path("__debug__/", include("debug_toolbar.urls")),
 ]
-
