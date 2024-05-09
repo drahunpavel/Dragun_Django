@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from .models import Hotel, Person
+from .models import Hotel
 
 
 # hotels = [
@@ -25,18 +25,18 @@ from .models import Hotel, Person
 # ]
 
 
-# users = [
-#     {"name": "Alice", "age": 30},
-#     {"name": "Bob", "age": 25},
-#     {"name": "Charlie", "age": 35},
-#     {"name": "David", "age": 28},
-#     {"name": "Eve", "age": 40},
-#     {"name": "Frank", "age": 22},
-#     {"name": "Grace", "age": 32},
-#     {"name": "Hannah", "age": 27},
-#     {"name": "Ian", "age": 38},
-#     {"name": "Jack", "age": 33}
-# ]
+users = [
+    {"name": "Alice", "age": 30},
+    {"name": "Bob", "age": 25},
+    {"name": "Charlie", "age": 35},
+    {"name": "David", "age": 28},
+    {"name": "Eve", "age": 40},
+    {"name": "Frank", "age": 22},
+    {"name": "Grace", "age": 32},
+    {"name": "Hannah", "age": 27},
+    {"name": "Ian", "age": 38},
+    {"name": "Jack", "age": 33}
+]
 
 comments = [
     {"text": "Great hotel! Will definitely come back here again.", "author": "Anna"},
@@ -82,8 +82,11 @@ def hotel_template_view(request, hotel_name: str):
 
 
 def users_template_view(request):
-    users = Person.objects.all()
-    return render(request=request, template_name='users.html', context={'users': users})
+    context = {
+        # 'users': Person.objects.all(),
+        'users': users,
+    }
+    return render(request=request, template_name='users.html', context=context)
 
 
 def error_404_template_view(request, exception):

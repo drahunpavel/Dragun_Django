@@ -2,33 +2,72 @@ from django.db import models
 from django.core.validators import MaxValueValidator, MinValueValidator
 from phonenumber_field.modelfields import PhoneNumberField
 
-SEX_PERSON = {
-        "m": "male",
-        "f": "female",
-    }
+SEX_CHOICES = {
+    "m": "male",
+    "f": "female",
+}
 
-class Person(models.Model):
+ROOM_TYPE_CHOICES = {
+    "s": "single",
+    "d": "double",
+    "o": "other"
+}
+
+
+# Guest
+# Profile
+# Booking
+# Hotel
+# Room
+# HotelService
+# BookingService
+# Comment
+
+'''
+Каждый гость (Guest) может сделать несколько бронирований (Booking), но каждое бронирование принадлежит только одному гостю
+У каждого гостя есть один профиль (Profile), и у каждого профиля есть только один гость
+Каждое бронирование (Booking) может включать несколько дополнительных услуг (BookingService)
+Каждый отель (Hotel) может иметь несколько номеров (Room)
+Каждый отель (Hotel) может предоставлять несколько дополнительных услуг (HotelService)
+Каждое бронирование (Booking) может включать несколько дополнительных услуг (HotelService), и каждая дополнительная услуга может быть включена в несколько бронирований
+Каждый гость (Guest) может оставлять комментарии (HotelComment) к разным Hotel
+'''
+
+
+class Guest(models.Model):
     first_name = models.CharField(max_length=30, null=True)
     last_name = models.CharField(max_length=50)
     age = models.PositiveIntegerField(validators=[
-            MaxValueValidator(120),
-            MinValueValidator(0)
-        ])
-    sex = models.CharField(max_length=1, choices=SEX_PERSON)
+        MaxValueValidator(120),
+        MinValueValidator(0)
+    ])
+    sex = models.CharField(max_length=1, choices=SEX_CHOICES)
     email = models.EmailField(null=True)
+    phone = PhoneNumberField(null=True, blank=False, unique=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
-    # Для визуалиции объекта в shell 
+    # Для визуалиции объекта в shell
     def __str__(self):
         return f" {self.first_name} {self.last_name}"
+
+
+class Profile(models.Model):
+    photo = models.ImageField(null=True, blank=True)
+    id_card = models.IntegerField(null=True)
+    serial_number = models.CharField(null=True, max_length=30)
+    guest = models.OneToOneField(
+        Guest, on_delete=models.CASCADE, related_name="profile")
+
+    def __str__(self):
+        return f"profile: {self.id_card}"
 
 
 class Hotel(models.Model):
     name = models.CharField(max_length=50)
     stars = models.FloatField(validators=[
-            MinValueValidator(0.0), MaxValueValidator(5.0)
-        ])
+        MinValueValidator(0.0), MaxValueValidator(5.0)
+    ])
     address = models.CharField(max_length=80)
     city = models.CharField(max_length=30)
     phone = PhoneNumberField(null=False, blank=False, unique=False)
@@ -37,3 +76,60 @@ class Hotel(models.Model):
 
     def __str__(self):
         return f" {self.name} {self.city}"
+
+
+class Room(models.Model):
+    room_num = models.PositiveIntegerField(validators=[
+        MaxValueValidator(1000),
+        MinValueValidator(1)
+    ])
+    type = models.CharField(max_length=1, choices=ROOM_TYPE_CHOICES)
+    price = models.FloatField()
+    hotel = models.ForeignKey(
+        Hotel, on_delete=models.SET_NULL, null=True, related_name="rooms")
+
+    def __str__(self) -> str:
+        return f'{self.room_num}'
+
+
+class HotelComment(models.Model):
+    text = models.CharField(max_length=200, null=True)
+    time = models.DateTimeField(auto_now_add=True)
+    hotel = models.ForeignKey(
+        Hotel, on_delete=models.SET_NULL, null=True, related_name="comments")
+    guest = models.ForeignKey(
+        Guest, on_delete=models.SET_NULL, null=True, related_name="comments")
+
+    def __str__(self):
+        return f" {self.text}"
+
+
+class Booking(models.Model):
+    details = models.CharField(max_length=200, null=True)
+    check_in_date = models.DateTimeField(auto_now_add=True)
+    check_out_date = models.DateTimeField(null=True)
+    guest = models.ForeignKey(
+        Guest, on_delete=models.SET_NULL, null=True, related_name='bookings')
+    hotel = models.ForeignKey(
+        Hotel, on_delete=models.SET_NULL, null=True, related_name='bookings')
+    hotel_services = models.ManyToManyField(
+        'HotelService', related_name='bookings')
+
+
+class HotelService(models.Model):
+    hotel = models.ForeignKey(
+        Hotel, on_delete=models.CASCADE, related_name='services')
+    name = models.CharField(max_length=100)
+    description = models.TextField()
+
+    def __str__(self):
+        return self.name
+
+
+class BookingService(models.Model):
+    booking = models.ForeignKey(
+        Booking, on_delete=models.CASCADE, related_name='services')
+    service = models.ForeignKey(HotelService, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return f"{self.booking.details}"
