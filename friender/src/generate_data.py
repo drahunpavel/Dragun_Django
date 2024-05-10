@@ -10,7 +10,7 @@ from faker import Faker
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings')
 django.setup()
 fake = Faker()
-
+from booking_service.models import Guest, Hotel, HotelComment, Profile, HotelService, Booking
 
 def round_to_nearest_half(number: int) -> int:
     return round(number * 2) / 2
@@ -130,10 +130,10 @@ def generate_fake_bookings(num=20) -> None:
 
 
 if __name__ == "__main__":
-    from booking_service.models import Guest, Hotel, HotelComment, Profile, HotelService, Booking
     # generate_fake_guests()
     # generate_fake_hotels()
     # generate_fake_comments()
     # generate_fake_profiles()
     # generate_fake_services()
     # generate_fake_bookings()
+    pass
