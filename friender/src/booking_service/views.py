@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from .models import Hotel
+from .models import Guest, Hotel, HotelComment
 
 
 # hotels = [
@@ -25,26 +25,26 @@ from .models import Hotel
 # ]
 
 
-users = [
-    {"name": "Alice", "age": 30},
-    {"name": "Bob", "age": 25},
-    {"name": "Charlie", "age": 35},
-    {"name": "David", "age": 28},
-    {"name": "Eve", "age": 40},
-    {"name": "Frank", "age": 22},
-    {"name": "Grace", "age": 32},
-    {"name": "Hannah", "age": 27},
-    {"name": "Ian", "age": 38},
-    {"name": "Jack", "age": 33}
-]
+# users = [
+#     {"name": "Alice", "age": 30},
+#     {"name": "Bob", "age": 25},
+#     {"name": "Charlie", "age": 35},
+#     {"name": "David", "age": 28},
+#     {"name": "Eve", "age": 40},
+#     {"name": "Frank", "age": 22},
+#     {"name": "Grace", "age": 32},
+#     {"name": "Hannah", "age": 27},
+#     {"name": "Ian", "age": 38},
+#     {"name": "Jack", "age": 33}
+# ]
 
-comments = [
-    {"text": "Great hotel! Will definitely come back here again.", "author": "Anna"},
-    {"text": "Wonderful place to stay. Highly recommend to everyone!", "author": "Max"},
-    {"text": "Excellent service, very attentive and responsive staff.", "author": "Olga"},
-    {"text": "Incredible view from the room window. It was an unforgettable vacation!", "author": "Alex"},
-    {"text": "Very beautiful and cozy hotel. Only positive impressions.", "author": "Maria"}
-]
+# comments = [
+#     {"text": "Great hotel! Will definitely come back here again.", "author": "Anna"},
+#     {"text": "Wonderful place to stay. Highly recommend to everyone!", "author": "Max"},
+#     {"text": "Excellent service, very attentive and responsive staff.", "author": "Olga"},
+#     {"text": "Incredible view from the room window. It was an unforgettable vacation!", "author": "Alex"},
+#     {"text": "Very beautiful and cozy hotel. Only positive impressions.", "author": "Maria"}
+# ]
 
 
 # def get_hotel_by_name(hotel_name):
@@ -74,17 +74,24 @@ def hotels_template_view(request):
 
 def hotel_template_view(request, hotel_name: str):
     hotel = Hotel.objects.filter(name=hotel_name)
+    comments = HotelComment.objects.filter(hotel__name=hotel_name)
+
+    comment_list = []
+
+    for comment in comments:
+        guest_name = comment.guest.first_name
+        comment_text = comment.text
+        comment_list.append({'name': guest_name, 'text': comment_text})
 
     if hotel:
-        return render(request=request, template_name='hotel.html', context={'hotel': hotel[0], 'comments': comments})
+        return render(request=request, template_name='hotel.html', context={'hotel': hotel[0], 'comments': comment_list})
     else:
         return render(request=request, template_name='404.html')
 
 
 def users_template_view(request):
     context = {
-        # 'users': Person.objects.all(),
-        'users': users,
+        'users': Guest.objects.all(),
     }
     return render(request=request, template_name='users.html', context=context)
 
