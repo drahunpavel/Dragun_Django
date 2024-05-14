@@ -47,10 +47,20 @@ class Guest(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+
+    class Meta:
+        indexes = [
+            models.Index(fields=['first_name'], name='first_name_idx'),
+            models.Index(fields=['last_name'], name='last_name_idx'),
+            models.Index(fields=['age'], name='age_idx'),
+        ]
+
     # Для визуалиции объекта в shell
     def __str__(self):
         return f" {self.first_name} {self.last_name}"
 
+class HotelOwner(Guest):
+    owner_exp_status = models.IntegerField(null=True)
 
 class Profile(models.Model):
     photo = models.ImageField(null=True, blank=True)
@@ -73,6 +83,12 @@ class Hotel(models.Model):
     phone = PhoneNumberField(null=False, blank=False, unique=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        indexes = [
+            models.Index(fields=['name'], name='name_idx'),
+            models.Index(fields=['stars'], name='stars_idx')
+        ]
 
     def __str__(self):
         return f" {self.name} {self.city}"
@@ -101,7 +117,7 @@ class HotelComment(models.Model):
         Guest, on_delete=models.SET_NULL, null=True, related_name="comments")
 
     def __str__(self):
-        return f" {self.text}"
+        return f"Guest: {self.guest.first_name} ||| comments: {self.text}"
 
 
 class Booking(models.Model):
@@ -115,6 +131,9 @@ class Booking(models.Model):
     hotel_services = models.ManyToManyField(
         'HotelService', related_name='bookings')
 
+    def __str__(self):
+        return f"Guest: {self.guest.first_name} ||| Hotel: {self.hotel.name}"
+
 
 class HotelService(models.Model):
     hotel = models.ForeignKey(
@@ -123,7 +142,7 @@ class HotelService(models.Model):
     description = models.TextField()
 
     def __str__(self):
-        return self.name
+        return f"Hotel: {self.hotel.name} ||| Service: {self.name}"
 
 
 class BookingService(models.Model):
@@ -132,4 +151,4 @@ class BookingService(models.Model):
     service = models.ForeignKey(HotelService, on_delete=models.CASCADE)
 
     def __str__(self):
-        return f"{self.booking.details}"
+        return f"Booking id: {self.booking.id} ||| Service: {self.service.name}"

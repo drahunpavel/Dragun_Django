@@ -9,17 +9,19 @@
     </div>
     <div class="container">
         <div class="row gy-4">
-            {% for user in users %}
-
+            {% for item in guests %}
             <div class="col-lg-4" data-aos="fade-up" data-aos-delay="100">
                 <div class="team-member d-flex align-items-start">
                     <div class="pic"><img src="{% static 'img/user.avif' %}" class="img-fluid" alt=""></div>
                     <div class="member-info">
-                        <h4>{{user.first_name}} {{user.last_name}}</h4>
-                        <span>Age: {{user.age}}</span>
-                        {% if user.email %}
-                        <p>email: {{user.email}}</p>
+                        <h4>{{item.guest.first_name}} {{item.guest.last_name}}</h4>
+                        <span>Age: {{item.guest.age}}</span>
+                        {% if item.guest.email %}
+                        <p>email: {{item.guest.email}}</p>
                         {% endif %}
+                        {% for service in item.services %}
+                        <p>{{service}}</p>
+                        {% endfor %}
                         <!-- <p>Explicabo voluptatem mollitia et repellat qui dolorum quasi</p> -->
                         <!-- <div class="social">
                             <a href=""><i class="bi bi-twitter"></i></a>
