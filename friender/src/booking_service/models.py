@@ -116,8 +116,8 @@ class HotelComment(models.Model):
     guest = models.ForeignKey(
         Guest, on_delete=models.SET_NULL, null=True, related_name="comments")
 
-    def __str__(self):
-        return f"Guest: {self.guest.first_name} ||| comments: {self.text}"
+    # def __str__(self):
+    #     return f"Guest: {self.guest.first_name} ||| comments: {self.text}"
 
 
 class Booking(models.Model):
