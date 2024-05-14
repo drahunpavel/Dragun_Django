@@ -62,9 +62,11 @@ class GuestAdmin(admin.ModelAdmin):
             'classes': ('collapse',)  # блок по умолчанию скрыт
         }),
     )
-    # actions = [
-    #     highlight_selected_fields,
-    # ]
+    class Media:
+        css = {
+            'all': ('css/admin_custom.css',)
+        }
+        js = ('js/admin_custom.js',)
 
 class HotelAdmin(admin.ModelAdmin):
     inlines = [HotelCommentInline, BookingInline, RoomInline]
