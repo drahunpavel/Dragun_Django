@@ -47,7 +47,6 @@ class Guest(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
-
     class Meta:
         indexes = [
             models.Index(fields=['first_name'], name='first_name_idx'),
@@ -59,8 +58,10 @@ class Guest(models.Model):
     def __str__(self):
         return f" {self.first_name} {self.last_name}"
 
+
 class HotelOwner(Guest):
     owner_exp_status = models.IntegerField(null=True)
+
 
 class Profile(models.Model):
     photo = models.ImageField(null=True, blank=True)
@@ -95,7 +96,7 @@ class Hotel(models.Model):
 
 
 class Room(models.Model):
-    room_num = models.PositiveIntegerField(validators=[
+    number = models.PositiveIntegerField(validators=[
         MaxValueValidator(1000),
         MinValueValidator(1)
     ])
@@ -103,9 +104,10 @@ class Room(models.Model):
     price = models.FloatField()
     hotel = models.ForeignKey(
         Hotel, on_delete=models.SET_NULL, null=True, related_name="rooms")
+    is_booked = models.BooleanField(default=False)
 
     def __str__(self) -> str:
-        return f'{self.room_num}'
+        return f'{self.number}'
 
 
 class HotelComment(models.Model):
@@ -121,6 +123,8 @@ class HotelComment(models.Model):
 
 
 class Booking(models.Model):
+    room = models.ForeignKey(
+        Room, related_name='bookings', on_delete=models.CASCADE, null=True)
     details = models.CharField(max_length=200, null=True)
     check_in_date = models.DateTimeField(auto_now_add=True)
     check_out_date = models.DateTimeField(null=True)
