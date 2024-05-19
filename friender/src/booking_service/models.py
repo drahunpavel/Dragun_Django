@@ -135,8 +135,8 @@ class Booking(models.Model):
     hotel_services = models.ManyToManyField(
         'HotelService', related_name='bookings')
 
-    def __str__(self):
-        return f"Guest: {self.guest.first_name} ||| Hotel: {self.hotel.name}"
+    # def __str__(self):
+    #     return f"Guest: {self.guest.first_name} ||| Hotel: {self.hotel.name}"
 
 
 class HotelService(models.Model):
