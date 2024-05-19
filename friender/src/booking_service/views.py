@@ -5,6 +5,7 @@ from datetime import timedelta
 from django.shortcuts import render
 from datetime import datetime
 from django.db.models import Q
+from django.views import View
 
 from booking_service.forms import CheckRoomForm
 from .models import Booking, Guest, Hotel, HotelComment, Room
@@ -210,3 +211,30 @@ def check_room_availability_view(request):
 def error_404_view(request, exception):
     context = {}
     return render(request, '404.html', context)
+
+
+class DeleteBookingView(View):
+    def get(self, request, booking_id):
+        try:
+            with transaction.atomic():
+                # select_for_update - блокировка записи бронирования
+                booking = Booking.objects.select_for_update().get(id=booking_id)
+                booking.delete()
+
+            context = {
+                'info': 'Deleted',
+                'booking_id': booking_id
+            }
+            return render(request, 'delete_booking.html', context)
+        except Booking.DoesNotExist:
+            context = {
+                'info': '404',
+                'booking_id': booking_id
+            }
+            return render(request, 'delete_booking.html', context)
+        except Exception as e:
+            context = {
+                'info': '500',
+                'booking_id': booking_id
+            }
+            return render(request, 'delete_booking.html', context)
