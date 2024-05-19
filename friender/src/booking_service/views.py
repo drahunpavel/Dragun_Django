@@ -18,11 +18,11 @@ from .models import Booking, Guest, Hotel, HotelComment
 #     return HttpResponse('home')
 
 
-def home_template_view(request):
+def home_view(request):
     return render(request=request, template_name='home.html')
 
 
-def hotels_template_view(request):
+def hotels_view(request):
     # hotels = Hotel.objects.all()
     hotels = Hotel.objects.prefetch_related('comments').all()
     # hotels = Hotel.objects.prefetch_related(Prefetch('comments', queryset=HotelComment.objects.all())).all()
@@ -47,7 +47,7 @@ def hotels_template_view(request):
     return render(request=request, template_name='hotels.html', context=context)
 
 
-def hotel_template_view(request, hotel_name: str):
+def hotel_view(request, hotel_name: str):
     hotel = Hotel.objects.filter(name=hotel_name)
     comments = HotelComment.objects.filter(hotel__name=hotel_name)
 
@@ -64,13 +64,14 @@ def hotel_template_view(request, hotel_name: str):
         return render(request=request, template_name='404.html')
 
 
-def users_template_view(request):
+def users_view(request):
     guests = Guest.objects.all()
 
     guests_list = []
 
     for guest in guests:
-        bookings = Booking.objects.filter(guest_id=guest.id).prefetch_related('hotel_services')
+        bookings = Booking.objects.filter(
+            guest_id=guest.id).prefetch_related('hotel_services')
         services_list = []
         for booking in bookings:
             for service in booking.hotel_services.all():
@@ -84,6 +85,6 @@ def users_template_view(request):
     return render(request=request, template_name='users.html', context=context)
 
 
-def error_404_template_view(request, exception):
+def error_404_view(request, exception):
     context = {}
     return render(request, '404.html', context)
