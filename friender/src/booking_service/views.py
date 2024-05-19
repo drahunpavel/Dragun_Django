@@ -1,8 +1,12 @@
+from django.http import HttpResponse
 from django.utils import timezone
 from datetime import timedelta
-from django.http import JsonResponse
+# from django.http import JsonResponse
 from django.shortcuts import render
-from django.db.models import Prefetch
+from datetime import datetime
+from django.db.models import Q
+
+from booking_service.forms import CheckRoomForm
 from .models import Booking, Guest, Hotel, HotelComment, Room
 from django.db import transaction
 # def get_hotel_by_name(hotel_name):
@@ -98,21 +102,18 @@ def book_room_view(request, hotel_name: str, user_id: int, room_number: int):
 
     try:
         hotel = Hotel.objects.get(name=hotel_name)
-        print('--hotel', hotel)
     except Hotel.DoesNotExist:
         context['hotel_name'] = 'Hotel is not found'
         return render(request, 'book.html', context)
 
     try:
         guest = Guest.objects.get(id=user_id)
-        print('--guest', guest)
     except Guest.DoesNotExist:
         context['user_id'] = 'User is not found'
         return render(request, 'book.html', context)
 
     try:
         room = Room.objects.get(hotel=hotel, number=room_number)
-        print('--room', room)
     except Room.DoesNotExist:
         context['room_number'] = 'Room is not found'
         return render(request, 'book.html', context)
@@ -138,6 +139,72 @@ def book_room_view(request, hotel_name: str, user_id: int, room_number: int):
         # Room.objects.filter(number=room.number).update(is_booked=True)
 
     return render(request, 'book.html', context)
+
+
+def render_check_room_view(request, error: str) -> HttpResponse:
+    form = CheckRoomForm()
+    context = {
+        'form': form,
+        'error': error
+    }
+    return render(request, 'check_room_availability.html', context)
+
+
+def check_room_availability_view(request):
+    if request.method == "POST":
+        check_room_form = CheckRoomForm(request.POST)
+        if check_room_form.is_valid():
+            room_number = int(request.POST.get('room_number'))
+            hotel_name = request.POST.get('hotel')
+            user_name = request.POST.get('guest')
+            check_in_date = request.POST.get('check_in_date')
+            check_out_date = request.POST.get('check_out_date')
+
+            # Преобразование строк в datetime объекты
+            check_in_date = datetime.strptime(check_in_date, '%Y-%m-%d')
+            check_out_date = datetime.strptime(check_out_date, '%Y-%m-%d')
+
+            first_name, last_name = user_name.split()
+
+            try:
+                guest = Guest.objects.get(
+                    Q(first_name=first_name) & Q(last_name=last_name))
+            except Guest.DoesNotExist:
+                return render_check_room_view(request, error='User is not found')
+            try:
+                room = Room.objects.get(
+                    hotel__name=hotel_name, number=room_number)
+            except:
+                return render_check_room_view(request, error='Room is not found')
+
+            try:
+                hotel = Hotel.objects.get(name=hotel_name)
+            except Hotel.DoesNotExist:
+                return render_check_room_view(request, error='Hotel is not found')
+
+            is_room_booked = Booking.objects.filter(
+                hotel__name=hotel_name,
+                room=room,
+                check_in_date__lt=check_out_date,
+                check_out_date__gt=check_in_date
+            ).exists()
+            if not is_room_booked:
+                print('check_in_date', check_in_date,
+                      'check_out_date', check_out_date)
+                with transaction.atomic():
+                    Booking.objects.create(
+                        guest=guest,
+                        hotel=hotel,
+                        room=room,
+                        details="Booking details from check_room_availability_view",
+                        check_in_date=check_in_date,
+                        check_out_date=check_out_date,
+                    )
+                    room.is_booked = True
+                    room.save()
+            else:
+                return render_check_room_view(request, error='Unavailable')
+    return render_check_room_view(request, error='')
 
 
 def error_404_view(request, exception):

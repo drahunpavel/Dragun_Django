@@ -126,7 +126,7 @@ class Booking(models.Model):
     room = models.ForeignKey(
         Room, related_name='bookings', on_delete=models.CASCADE, null=True)
     details = models.CharField(max_length=200, null=True)
-    check_in_date = models.DateTimeField(auto_now_add=True)
+    check_in_date = models.DateTimeField(null=True)
     check_out_date = models.DateTimeField(null=True)
     guest = models.ForeignKey(
         Guest, on_delete=models.SET_NULL, null=True, related_name='bookings')
