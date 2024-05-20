@@ -1,4 +1,4 @@
-from django.http import HttpResponse
+from typing import Optional
 from django.utils import timezone
 from datetime import timedelta
 # from django.http import JsonResponse
@@ -6,7 +6,7 @@ from django.shortcuts import render
 from datetime import datetime
 from django.db.models import Q
 from django.views import View
-
+from django.http import HttpRequest, HttpResponse
 from booking_service.forms import CheckRoomForm
 from .models import Booking, Guest, Hotel, HotelComment, Room
 from django.db import transaction
@@ -26,11 +26,11 @@ from django.db import transaction
 #     return HttpResponse('home')
 
 
-def home_view(request):
+def home_view(request: HttpRequest) -> HttpResponse:
     return render(request=request, template_name='home.html')
 
 
-def hotels_view(request):
+def hotels_view(request: HttpRequest) -> HttpResponse:
     # hotels = Hotel.objects.all()
     hotels = Hotel.objects.prefetch_related('comments').all()
     # hotels = Hotel.objects.prefetch_related(Prefetch('comments', queryset=HotelComment.objects.all())).all()
@@ -55,7 +55,7 @@ def hotels_view(request):
     return render(request=request, template_name='hotels.html', context=context)
 
 
-def hotel_view(request, hotel_name: str):
+def hotel_view(request: HttpRequest, hotel_name: str) -> HttpResponse:
     hotel = Hotel.objects.filter(name=hotel_name)
     comments = HotelComment.objects.filter(hotel__name=hotel_name)
 
@@ -72,7 +72,7 @@ def hotel_view(request, hotel_name: str):
         return render(request=request, template_name='404.html')
 
 
-def users_view(request):
+def users_view(request: HttpRequest) -> HttpResponse:
     guests = Guest.objects.all()
 
     guests_list = []
@@ -93,7 +93,7 @@ def users_view(request):
     return render(request=request, template_name='users.html', context=context)
 
 
-def book_room_view(request, hotel_name: str, user_id: int, room_number: int):
+def book_room_view(request: HttpRequest, hotel_name: str, user_id: int, room_number: int) -> HttpResponse:
     context = {
         'hotel_name': hotel_name,
         'user_id': user_id,
@@ -142,7 +142,7 @@ def book_room_view(request, hotel_name: str, user_id: int, room_number: int):
     return render(request, 'book.html', context)
 
 
-def render_check_room_view(request, error: str) -> HttpResponse:
+def render_check_room_view(request: HttpRequest, error: str = '') -> HttpResponse:
     form = CheckRoomForm()
     context = {
         'form': form,
@@ -151,7 +151,16 @@ def render_check_room_view(request, error: str) -> HttpResponse:
     return render(request, 'check_room_availability.html', context)
 
 
-def check_room_availability_view(request):
+def get_guest_by_full_name(full_name: str) -> Optional[Guest]:
+    first_name, last_name = full_name.split()
+    return Guest.objects.get(Q(first_name=first_name) & Q(last_name=last_name))
+
+
+def get_room_by_number_and_hotel(room_number: int, hotel_name: str) -> Room:
+    return Room.objects.get(hotel__name=hotel_name, number=room_number)
+
+
+def check_room_availability_view(request: HttpRequest) -> HttpResponse:
     if request.method == "POST":
         check_room_form = CheckRoomForm(request.POST)
         if check_room_form.is_valid():
@@ -165,16 +174,13 @@ def check_room_availability_view(request):
             check_in_date = datetime.strptime(check_in_date, '%Y-%m-%d')
             check_out_date = datetime.strptime(check_out_date, '%Y-%m-%d')
 
-            first_name, last_name = user_name.split()
-
             try:
-                guest = Guest.objects.get(
-                    Q(first_name=first_name) & Q(last_name=last_name))
+                guest = get_guest_by_full_name(user_name)
             except Guest.DoesNotExist:
                 return render_check_room_view(request, error='User is not found')
+
             try:
-                room = Room.objects.get(
-                    hotel__name=hotel_name, number=room_number)
+                room = get_room_by_number_and_hotel(room_number, hotel_name)
             except:
                 return render_check_room_view(request, error='Room is not found')
 
@@ -189,9 +195,8 @@ def check_room_availability_view(request):
                 check_in_date__lt=check_out_date,
                 check_out_date__gt=check_in_date
             ).exists()
+
             if not is_room_booked:
-                print('check_in_date', check_in_date,
-                      'check_out_date', check_out_date)
                 with transaction.atomic():
                     Booking.objects.create(
                         guest=guest,
@@ -203,6 +208,7 @@ def check_room_availability_view(request):
                     )
                     room.is_booked = True
                     room.save()
+                return render_check_room_view(request, error='Booking successful')
             else:
                 return render_check_room_view(request, error='Unavailable')
     return render_check_room_view(request, error='')
@@ -214,27 +220,21 @@ def error_404_view(request, exception):
 
 
 class DeleteBookingView(View):
-    def get(self, request, booking_id):
+    template_name = 'delete_booking.html'
+
+    def get(self, request: HttpRequest, booking_id: int) -> HttpResponse:
+        context = {
+            'booking_id': booking_id
+        }
         try:
             with transaction.atomic():
                 # select_for_update - блокировка записи бронирования
                 booking = Booking.objects.select_for_update().get(id=booking_id)
                 booking.delete()
-
-            context = {
-                'info': 'Deleted',
-                'booking_id': booking_id
-            }
-            return render(request, 'delete_booking.html', context)
+                context['info'] = 'Deleted'
         except Booking.DoesNotExist:
-            context = {
-                'info': '404',
-                'booking_id': booking_id
-            }
-            return render(request, 'delete_booking.html', context)
+            context['info'] = '404'
         except Exception as e:
-            context = {
-                'info': '500',
-                'booking_id': booking_id
-            }
-            return render(request, 'delete_booking.html', context)
+            context['info'] = '500'
+
+        return render(request, self.template_name, context)
