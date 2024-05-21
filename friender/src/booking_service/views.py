@@ -1,3 +1,4 @@
+from multiprocessing.managers import BaseManager
 from typing import Optional
 from django.utils import timezone
 from datetime import timedelta
@@ -7,7 +8,7 @@ from datetime import datetime
 from django.db.models import Q
 from django.views import View
 from django.http import HttpRequest, HttpResponse
-from .forms import AddGuestForm, CheckRoomForm
+from .forms import AddCommentForm, AddGuestForm, CheckRoomForm
 from .models import Booking, Guest, Hotel, HotelComment, Room
 from django.db import transaction
 # def get_hotel_by_name(hotel_name):
@@ -56,20 +57,40 @@ def hotels_view(request: HttpRequest) -> HttpResponse:
 
 
 def hotel_view(request: HttpRequest, hotel_name: str) -> HttpResponse:
-    hotel = Hotel.objects.filter(name=hotel_name)
-    comments = HotelComment.objects.filter(hotel__name=hotel_name)
+    hotel: BaseManager[Hotel] = Hotel.objects.filter(name=hotel_name).first()
 
-    comment_list = []
+    if not hotel:
+        return render(request=request, template_name='404.html')
+
+    comments: BaseManager[HotelComment] = HotelComment.objects.filter(hotel__name=hotel_name)
+    comment_list: list = []
+
+    if request.method == 'POST':
+        comment_form = AddCommentForm(request.POST)
+        if comment_form.is_valid():
+            # костыль, предполагаем, что зарег пользователь в бд оставляет коммент
+            guest: Guest = Guest.objects.get(first_name='Alice', last_name = 'Cooper')
+            '''
+            commit=True по умолчанию, сохраняет изменения в базу данных и возвращает экземпляр модели
+            commit=False создает объект модели и заполняет его данными из формы, но не сохраняет его в базу данных.
+            позволяет изменить данные перед сохранением
+            '''
+            new_comment = comment_form.save(commit=False)
+            new_comment.guest = guest
+            new_comment.hotel = hotel
+            new_comment.save()
+
+            return redirect('Hotel', hotel_name=hotel_name)
+    else:
+        comment_form = AddCommentForm()
 
     for comment in comments:
-        guest_name = comment.guest.first_name
-        comment_text = comment.text
+        guest_name: str | None = comment.guest.first_name
+        comment_text: str | None = comment.text
         comment_list.append({'name': guest_name, 'text': comment_text})
 
-    if hotel:
-        return render(request=request, template_name='hotel.html', context={'hotel': hotel[0], 'comments': comment_list})
-    else:
-        return render(request=request, template_name='404.html')
+    context = {'hotel': hotel, 'comments': comment_list, 'comment_form': comment_form}
+    return render(request=request, template_name='hotel.html', context=context)
 
 
 def users_view(request: HttpRequest) -> HttpResponse:
@@ -252,3 +273,6 @@ class AddGuestView(View):
             form.save() # Сохранение формы в бд
             return redirect('Users')
         return render(request, self.template_name, {'form':form})
+    
+
+# class AddHotelComment(View):
