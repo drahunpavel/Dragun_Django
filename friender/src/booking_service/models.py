@@ -44,8 +44,8 @@ class Guest(models.Model):
     first_name = models.CharField(max_length=30, null=True)
     last_name = models.CharField(max_length=50)
     age = models.PositiveIntegerField(validators=[
-        MaxValueValidator(120),
-        MinValueValidator(0)
+        MaxValueValidator(90),
+        MinValueValidator(18)
     ])
     sex = models.CharField(max_length=1, choices=SEX_CHOICES)
     email = models.EmailField(null=True)

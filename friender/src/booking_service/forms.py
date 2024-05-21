@@ -1,5 +1,5 @@
 from django import forms
-
+from .validators import validate_yahoo_email
 from .models import Guest
 
 
@@ -12,6 +12,9 @@ class CheckRoomForm(forms.Form):
     check_out_date = forms.DateTimeField()
 
 class AddGuestForm(forms.ModelForm):
+
+    email = forms.EmailField(validators=[validate_yahoo_email])
+    
     class Meta:
         model = Guest
         fields: list[str] = ['first_name', 'last_name', 'age', 'sex', 'email', 'phone']
