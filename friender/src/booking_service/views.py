@@ -2,12 +2,12 @@ from typing import Optional
 from django.utils import timezone
 from datetime import timedelta
 # from django.http import JsonResponse
-from django.shortcuts import render
+from django.shortcuts import redirect, render
 from datetime import datetime
 from django.db.models import Q
 from django.views import View
 from django.http import HttpRequest, HttpResponse
-from booking_service.forms import CheckRoomForm
+from .forms import AddGuestForm, CheckRoomForm
 from .models import Booking, Guest, Hotel, HotelComment, Room
 from django.db import transaction
 # def get_hotel_by_name(hotel_name):
@@ -214,22 +214,21 @@ def check_room_availability_view(request: HttpRequest) -> HttpResponse:
     return render_check_room_view(request, error='')
 
 
-def error_404_view(request, exception):
-    context = {}
-    return render(request, '404.html', context)
+def error_404_view(request, exception) -> HttpResponse:
+    return render(request, '404.html', {})
 
 
 class DeleteBookingView(View):
-    template_name = 'delete_booking.html'
+    template_name: str = 'delete_booking.html'
 
     def get(self, request: HttpRequest, booking_id: int) -> HttpResponse:
-        context = {
+        context: dict[str, int] = {
             'booking_id': booking_id
         }
         try:
             with transaction.atomic():
                 # select_for_update - блокировка записи бронирования
-                booking = Booking.objects.select_for_update().get(id=booking_id)
+                booking: Booking = Booking.objects.select_for_update().get(id=booking_id)
                 booking.delete()
                 context['info'] = 'Deleted'
         except Booking.DoesNotExist:
@@ -238,3 +237,18 @@ class DeleteBookingView(View):
             context['info'] = '500'
 
         return render(request, self.template_name, context)
+
+
+class AddGuestView(View):
+    template_name: str = 'add_guest.html'
+
+    def get(self, request: HttpRequest) -> HttpResponse:
+        form = AddGuestForm() #пустой экземпляр формы
+        return render(request, self.template_name, {'form':form})
+
+    def post(self, request: HttpRequest) -> HttpResponse:
+        form = AddGuestForm(request.POST)
+        if form.is_valid():
+            form.save() # Сохранение формы в бд
+            return redirect('Users')
+        return render(request, self.template_name, {'form':form})

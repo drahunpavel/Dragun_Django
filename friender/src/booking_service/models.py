@@ -2,16 +2,22 @@ from django.db import models
 from django.core.validators import MaxValueValidator, MinValueValidator
 from phonenumber_field.modelfields import PhoneNumberField
 
-SEX_CHOICES = {
-    "m": "male",
-    "f": "female",
-}
+SEX_CHOICES = [
+    ("m", "male"),
+    ("f", "female"),
+]
+# ROOM_TYPE_CHOICES = {
+#     "s": "single",
+#     "d": "double",
+#     "o": "other"
+# }
 
-ROOM_TYPE_CHOICES = {
-    "s": "single",
-    "d": "double",
-    "o": "other"
-}
+ROOM_TYPE_CHOICES = [
+    ("s", "single"),
+    ("d", "double"),
+    ("o", "other")
+]
+
 
 
 # Guest

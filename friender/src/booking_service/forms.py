@@ -1,5 +1,7 @@
 from django import forms
 
+from .models import Guest
+
 
 class CheckRoomForm(forms.Form):
     room_number = forms.IntegerField()
@@ -8,3 +10,9 @@ class CheckRoomForm(forms.Form):
     # details = forms.CharField(max_length=200, initial='Default Details')
     check_in_date = forms.DateTimeField()
     check_out_date = forms.DateTimeField()
+
+class AddGuestForm(forms.ModelForm):
+    class Meta:
+        model = Guest
+        fields: list[str] = ['first_name', 'last_name', 'age', 'sex', 'email', 'phone']
+
