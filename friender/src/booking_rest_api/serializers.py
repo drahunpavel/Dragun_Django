@@ -2,7 +2,7 @@ from multiprocessing.managers import BaseManager
 from rest_framework import serializers
 from django.core.validators import MaxValueValidator, MinValueValidator
 
-from booking_service.models import SEX_CHOICES, Guest
+from booking_service.models import SEX_CHOICES, Guest, HotelService
 
 #* сериализатор для модели Guest (не связан с моделью)
 class GuestSerializer(serializers.Serializer):
@@ -42,3 +42,9 @@ class GuestSerializer(serializers.Serializer):
     
     def delete(self, instance) -> None:
         instance.delete()
+
+#* сериализатор для модели HotelService (связан с моделью)
+class HotelServiceSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = HotelService
+        fields: list[str] = ['id', 'name', 'description']

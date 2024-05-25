@@ -6,8 +6,8 @@ from rest_framework import status
 from rest_framework.decorators import api_view
 
 from .renderers import CustomRenderer
-from .serializers import GuestSerializer
-from booking_service.models import Guest
+from .serializers import GuestSerializer, HotelServiceSerializer
+from booking_service.models import Guest, HotelService
     
 
 class GuestApiView(APIView):
@@ -53,6 +53,13 @@ class GuestApiView(APIView):
         serializer = GuestSerializer()
         serializer.delete(guest)
         return Response({"message": "Guest deleted"})
+
+class HotelServiceApiView(APIView):
+    def get(self, request) -> Response:
+        services: BaseManager[HotelService] = HotelService.objects.all()
+        serializer = HotelServiceSerializer(services, many=True)
+        return Response(serializer.data)
+
 
 
 @api_view(['GET'])
