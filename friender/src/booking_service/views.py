@@ -15,6 +15,7 @@ from django.views.generic import TemplateView
 from django.views.generic import CreateView, FormView
 from django.urls import reverse_lazy
 from django.views.generic import DeleteView
+from django.views.generic import ListView
 
 # def get_hotel_by_name(hotel_name):
 #     hotel = Hotel.objects.filter(name__in=[hotel_name])
@@ -102,6 +103,12 @@ def hotel_view(request: HttpRequest, hotel_name: str) -> HttpResponse:
     context = {'hotel': hotel, 'comments': comment_list, 'comment_form': comment_form}
     return render(request=request, template_name='hotel.html', context=context)
 
+
+class GuestListView(ListView):
+    model = Guest
+    template_name = 'guest_list.html' 
+    context_object_name = 'guests'
+    paginate_by = 3 
 
 def users_view(request: HttpRequest) -> HttpResponse:
     guests = Guest.objects.all()
