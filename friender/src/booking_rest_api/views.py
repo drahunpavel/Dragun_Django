@@ -11,7 +11,7 @@ from booking_service.models import Guest
     
 
 class GuestApiView(APIView):
-    renderer_classes = [CustomRenderer]
+    renderer_classes: list[type[CustomRenderer]] = [CustomRenderer]
 
     def get_object(self, id: int) -> Guest:
         try:
@@ -48,6 +48,11 @@ class GuestApiView(APIView):
             return Response(guest.data, status=status.HTTP_201_CREATED)
         return Response(guest.errors, status=status.HTTP_400_BAD_REQUEST)
     
+    def delete(self, request, pk) -> Response:
+        guest: Guest = self.get_object(pk)
+        serializer = GuestSerializer()
+        serializer.delete(guest)
+        return Response({"message": "Guest deleted"})
 
 
 @api_view(['GET'])

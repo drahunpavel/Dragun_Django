@@ -39,3 +39,6 @@ class GuestSerializer(serializers.Serializer):
         instance.phone = validated_data.get('phone', instance.phone)
         instance.save()
         return instance
+    
+    def delete(self, instance) -> None:
+        instance.delete()

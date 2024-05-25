@@ -9,4 +9,5 @@ urlpatterns: list[URLPattern] = [
     path('guests/list', GuestApiView.as_view(), name='guest_list'),
     path('guests/create', GuestApiView.as_view(), name='guest_create'),
     path('guests/update', GuestApiView.as_view(), name='guest_update'),
+    path('guests/delete/<int:pk>', GuestApiView.as_view(), name='guest_delete'),
 ]
