@@ -49,7 +49,7 @@ class AddCommentForm(forms.ModelForm):
         widgets: dict[str, forms.Textarea] = {
             'text': forms.Textarea(attrs={'cols': 40, 'rows': 4}),
         }
-        field_order: list[str] = ['guest', 'text'] # упорядочивание полей в форме
+        # field_order: list[str] = ['guest', 'text'] # упорядочивание полей в форме
 
     # вариант через инициализацию
     # def __init__(self, *args, **kwargs):

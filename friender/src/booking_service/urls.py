@@ -1,5 +1,5 @@
 from django.urls import URLPattern, path
-from .views import (DeleteBookingView, AddGuestView, book_room_view,
+from .views import (DeleteBookingView, AddGuestView, GuestDeleteView, book_room_view,
                     check_room_availability_view,
                     HomeView, hotel_view,
                     hotels_view, users_view)
@@ -17,6 +17,7 @@ urlpatterns: list[URLPattern] = [
          check_room_availability_view, name='check_room'),
     path('delete_booking/<int:booking_id>/',
          DeleteBookingView.as_view(), name='delete_Booking'),
-    path('add_guest', AddGuestView.as_view(), name='add_guest')
+    path('add_guest', AddGuestView.as_view(), name='add_guest'),
+    path('guest/<int:pk>/delete', GuestDeleteView.as_view(), name='guest_delete'),
     # re_path(r"^articles/(?P<year>[0-9]{4})/$", views.year_archive),
 ]

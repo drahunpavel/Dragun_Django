@@ -14,6 +14,7 @@ from django.db import transaction
 from django.views.generic import TemplateView
 from django.views.generic import CreateView, FormView
 from django.urls import reverse_lazy
+from django.views.generic import DeleteView
 
 # def get_hotel_by_name(hotel_name):
 #     hotel = Hotel.objects.filter(name__in=[hotel_name])
@@ -76,33 +77,20 @@ def hotel_view(request: HttpRequest, hotel_name: str) -> HttpResponse:
 
     if request.method == 'POST':
         comment_form = AddCommentForm(request.POST)
-        #*  форма comment_form не привязана к модели HotelComment
         if comment_form.is_valid():
-            text: str = comment_form.cleaned_data['text']
-            guest: Guest = Guest.objects.get(first_name='Alice', last_name = 'Cooper')
-            
-            HotelComment.objects.create(
-                text=text,
-                guest=guest,
-                hotel=hotel,
-            )
+            # костыль, предполагаем, что зарег пользователь в бд оставляет коммент
+            guest: Guest = Guest.objects.get(first_name='Jacob', last_name = 'Collins')
+            '''
+            commit=True по умолчанию, сохраняет изменения в базу данных и возвращает экземпляр модели
+            commit=False создает объект модели и заполняет его данными из формы, но не сохраняет его в базу данных.
+            позволяет изменить данные перед сохранением
+            '''
+            new_comment = comment_form.save(commit=False)
+            new_comment.guest = guest
+            new_comment.hotel = hotel
+            new_comment.save()
 
             return redirect('hotel', hotel_name=hotel_name)
-        # рабочий вариант для формы comment_form связанной с моделью HotelComment
-        # if comment_form.is_valid():
-        #     # костыль, предполагаем, что зарег пользователь в бд оставляет коммент
-        #     guest: Guest = Guest.objects.get(first_name='Alice', last_name = 'Cooper')
-        #     '''
-        #     commit=True по умолчанию, сохраняет изменения в базу данных и возвращает экземпляр модели
-        #     commit=False создает объект модели и заполняет его данными из формы, но не сохраняет его в базу данных.
-        #     позволяет изменить данные перед сохранением
-        #     '''
-        #     new_comment = comment_form.save(commit=False)
-        #     new_comment.guest = guest
-        #     new_comment.hotel = hotel
-        #     new_comment.save()
-
-        #     return redirect('Hotel', hotel_name=hotel_name)
     else:
         comment_form = AddCommentForm()
 
@@ -324,4 +312,8 @@ class AddGuestView(FormView):
 #         return render(request, self.template_name, {'form':form})
     
 
+class GuestDeleteView(DeleteView):
+    model = Guest
+    template_name = 'guest_confirm_delete.html'
+    success_url = reverse_lazy('guest_list')
 
