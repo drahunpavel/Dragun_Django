@@ -8,10 +8,12 @@ from datetime import datetime
 from django.db.models import Q
 from django.views import View
 from django.http import HttpRequest, HttpResponse
-from .forms import AddCommentForm, AddGuestForm, CheckRoomForm
+from .forms import AddCommentForm, AddGuestForm, AddGuestForm2, CheckRoomForm
 from .models import Booking, Guest, Hotel, HotelComment, Room
 from django.db import transaction
 from django.views.generic import TemplateView
+from django.views.generic import CreateView, FormView
+from django.urls import reverse_lazy
 
 # def get_hotel_by_name(hotel_name):
 #     hotel = Hotel.objects.filter(name__in=[hotel_name])
@@ -74,20 +76,33 @@ def hotel_view(request: HttpRequest, hotel_name: str) -> HttpResponse:
 
     if request.method == 'POST':
         comment_form = AddCommentForm(request.POST)
+        #*  форма comment_form не привязана к модели HotelComment
         if comment_form.is_valid():
-            # костыль, предполагаем, что зарег пользователь в бд оставляет коммент
+            text: str = comment_form.cleaned_data['text']
             guest: Guest = Guest.objects.get(first_name='Alice', last_name = 'Cooper')
-            '''
-            commit=True по умолчанию, сохраняет изменения в базу данных и возвращает экземпляр модели
-            commit=False создает объект модели и заполняет его данными из формы, но не сохраняет его в базу данных.
-            позволяет изменить данные перед сохранением
-            '''
-            new_comment = comment_form.save(commit=False)
-            new_comment.guest = guest
-            new_comment.hotel = hotel
-            new_comment.save()
+            
+            HotelComment.objects.create(
+                text=text,
+                guest=guest,
+                hotel=hotel,
+            )
 
-            return redirect('Hotel', hotel_name=hotel_name)
+            return redirect('hotel', hotel_name=hotel_name)
+        # рабочий вариант для формы comment_form связанной с моделью HotelComment
+        # if comment_form.is_valid():
+        #     # костыль, предполагаем, что зарег пользователь в бд оставляет коммент
+        #     guest: Guest = Guest.objects.get(first_name='Alice', last_name = 'Cooper')
+        #     '''
+        #     commit=True по умолчанию, сохраняет изменения в базу данных и возвращает экземпляр модели
+        #     commit=False создает объект модели и заполняет его данными из формы, но не сохраняет его в базу данных.
+        #     позволяет изменить данные перед сохранением
+        #     '''
+        #     new_comment = comment_form.save(commit=False)
+        #     new_comment.guest = guest
+        #     new_comment.hotel = hotel
+        #     new_comment.save()
+
+        #     return redirect('Hotel', hotel_name=hotel_name)
     else:
         comment_form = AddCommentForm()
 
@@ -149,8 +164,8 @@ def book_room_view(request: HttpRequest, hotel_name: str, user_id: int, room_num
 
     # транзакционное изменение
     with transaction.atomic():
-        # проверка, есть ли актуальная бронь на данный номер в данном отеле
-        # exists - проверяет наличие объектов в QuerySet, возвращает True\False
+        #* проверка, есть ли актуальная бронь на данный номер в данном отеле
+        #* exists - проверяет наличие объектов в QuerySet, возвращает True\False
         if Booking.objects.filter(hotel=hotel, room=room).exists():
             context['info'] = f'hotel room: {str(room_number)} booked'
             return render(request, 'book.html', context)
@@ -203,21 +218,21 @@ def check_room_availability_view(request: HttpRequest) -> HttpResponse:
             check_out_date = datetime.strptime(check_out_date, '%Y-%m-%d')
 
             try:
-                guest = get_guest_by_full_name(user_name)
+                guest: Guest | None = get_guest_by_full_name(user_name)
             except Guest.DoesNotExist:
                 return render_check_room_view(request, error='User is not found')
 
             try:
-                room = get_room_by_number_and_hotel(room_number, hotel_name)
+                room: Room = get_room_by_number_and_hotel(room_number, hotel_name)
             except:
                 return render_check_room_view(request, error='Room is not found')
 
             try:
-                hotel = Hotel.objects.get(name=hotel_name)
+                hotel: Hotel = Hotel.objects.get(name=hotel_name)
             except Hotel.DoesNotExist:
                 return render_check_room_view(request, error='Hotel is not found')
 
-            is_room_booked = Booking.objects.filter(
+            is_room_booked: bool = Booking.objects.filter(
                 hotel__name=hotel_name,
                 room=room,
                 check_in_date__lt=check_out_date,
@@ -255,7 +270,7 @@ class DeleteBookingView(View):
         }
         try:
             with transaction.atomic():
-                # select_for_update - блокировка записи бронирования
+                #* select_for_update - блокировка записи бронирования
                 booking: Booking = Booking.objects.select_for_update().get(id=booking_id)
                 booking.delete()
                 context['info'] = 'Deleted'
@@ -267,19 +282,46 @@ class DeleteBookingView(View):
         return render(request, self.template_name, context)
 
 
-class AddGuestView(View):
-    template_name: str = 'add_guest.html'
+#* вьюшка для добавления гостя через класс CreateView. Форма связана с моделью Guest
+# class AddGuestView(CreateView):
+#     model = Guest
+#     form_class = AddGuestForm2
+#     template_name = 'add_guest.html'
+#     success_url = reverse_lazy('guest_list')
 
-    def get(self, request: HttpRequest) -> HttpResponse:
-        form = AddGuestForm() #пустой экземпляр формы
-        return render(request, self.template_name, {'form':form})
+#* вьюшка для добавления гостя через класс FormView. Форма НЕ связана с моделью Guest
+class AddGuestView(FormView):
+    form_class = AddGuestForm
+    template_name = 'add_guest.html'
+    success_url = reverse_lazy('guest_list') 
 
-    def post(self, request: HttpRequest) -> HttpResponse:
-        form = AddGuestForm(request.POST)
-        if form.is_valid():
-            form.save() # Сохранение формы в бд
-            return redirect('Users')
-        return render(request, self.template_name, {'form':form})
+    def form_valid(self, form) -> HttpResponse:
+        first_name = form.cleaned_data['first_name']
+        last_name = form.cleaned_data['last_name']
+        age = form.cleaned_data['age']
+        sex = form.cleaned_data['sex']
+        email = form.cleaned_data['email']
+        phone = form.cleaned_data['phone']
+        
+        Guest.objects.create(first_name=first_name, last_name=last_name, age=age, sex=sex, email=email, phone=phone)
+        
+        return super().form_valid(form)
+
+
+#* Рабочий вариант через класс View
+# class AddGuestView(View):
+#     template_name: str = 'add_guest.html'
+
+#     def get(self, request: HttpRequest) -> HttpResponse:
+#         form = AddGuestForm() #пустой экземпляр формы
+#         return render(request, self.template_name, {'form':form})
+
+#     def post(self, request: HttpRequest) -> HttpResponse:
+#         form = AddGuestForm(request.POST)
+#         if form.is_valid():
+#             form.save() # Сохранение формы в бд
+#             return redirect('Users')
+#         return render(request, self.template_name, {'form':form})
     
 
-# class AddHotelComment(View):
+

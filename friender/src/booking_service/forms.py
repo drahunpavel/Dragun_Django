@@ -1,16 +1,17 @@
 from django import forms
 from .validators import validate_yahoo_email
 from .models import Guest, HotelComment
-
+from django.core.validators import MaxValueValidator, MinValueValidator
+from phonenumber_field.formfields import PhoneNumberField
 
 class CheckRoomForm(forms.Form):
     room_number = forms.IntegerField()
     guest = forms.CharField(max_length=50, initial='Alice Cooper')
     hotel = forms.CharField(max_length=50, initial='Hotel_Hotel')
-    # details = forms.CharField(max_length=200, initial='Default Details')
     check_in_date = forms.DateTimeField()
     check_out_date = forms.DateTimeField()
 
+#* Форма AddGuestForm наследуется от модели
 class AddGuestForm(forms.ModelForm):
 
     email = forms.EmailField(validators=[validate_yahoo_email])
@@ -19,7 +20,22 @@ class AddGuestForm(forms.ModelForm):
         model = Guest
         fields: list[str] = ['first_name', 'last_name', 'age', 'sex', 'email', 'phone']
 
+#* Форма AddGuestForm не наследуется от модели
+class AddGuestForm2(forms.Form):
+    first_name = forms.CharField(max_length=30, required=False)
+    last_name = forms.CharField(max_length=50)
+    age = forms.IntegerField(validators=[
+        MaxValueValidator(90),
+        MinValueValidator(18)
+    ])
+    sex = forms.ChoiceField(choices=[('M', 'Male'), ('F', 'Female')])
+    email = forms.EmailField(validators=[validate_yahoo_email])
+    phone = PhoneNumberField()
 
+
+
+
+#* форма AddCommentForm связана с моделью HotelComment
 class AddCommentForm(forms.ModelForm):
     # guest = forms.CharField(label='Your Name', max_length=100)
 
@@ -33,9 +49,11 @@ class AddCommentForm(forms.ModelForm):
         widgets: dict[str, forms.Textarea] = {
             'text': forms.Textarea(attrs={'cols': 40, 'rows': 4}),
         }
-        # field_order: list[str] = ['guest', 'text'] # упорядочивание полей в форме
+        field_order: list[str] = ['guest', 'text'] # упорядочивание полей в форме
 
     # вариант через инициализацию
     # def __init__(self, *args, **kwargs):
     #     super(AddCommentForm, self).__init__(*args, **kwargs)
     #     self.fields['text'].widget = forms.Textarea(attrs={'rows': 4, 'cols': 40})
+
+
