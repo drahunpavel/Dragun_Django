@@ -167,5 +167,6 @@ INTERNAL_IPS = [
 
 
 
+
 # todo настройка для автоинкрементированных ключей. Если используются uuid - не нужна
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'

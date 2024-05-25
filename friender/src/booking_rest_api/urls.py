@@ -1,9 +1,12 @@
 from django.urls import URLPattern, path
 
+from .views import GuestApiView, hello_world
+
 
 
 urlpatterns: list[URLPattern] = [
-    #  path('', home_view, name='home'),
-#     path('', HomeView.as_view(), name='home'),
-
+    path('some_url_example', hello_world),
+    path('guests/list', GuestApiView.as_view(), name='guest_list'),
+    path('guests/create', GuestApiView.as_view(), name='guest_create'),
+    path('guests/update', GuestApiView.as_view(), name='guest_update'),
 ]
