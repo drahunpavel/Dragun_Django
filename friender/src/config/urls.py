@@ -23,5 +23,6 @@ handler404 = 'booking_service.views.error_404_view'
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('booking/', include('booking_service.urls')),
+    path('api/', include('booking_rest_api.urls')),
     path("__debug__/", include("debug_toolbar.urls")),
 ]

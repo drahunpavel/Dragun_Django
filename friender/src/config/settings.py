@@ -51,11 +51,13 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'debug_toolbar',
     'booking_service',
+    'booking_rest_api',
     'phonenumber_field',
     'bootstrap5',
     'crispy_forms',
     'crispy_bootstrap5',
-    'django_extensions'
+    'django_extensions',
+    'django_filters'
 ]
 
 #  Bootstrap 5 в качестве шаблона для crispy-forms
