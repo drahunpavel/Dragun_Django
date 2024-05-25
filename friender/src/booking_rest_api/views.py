@@ -55,11 +55,22 @@ class GuestApiView(APIView):
         return Response({"message": "Guest deleted"})
 
 class HotelServiceApiView(APIView):
+    renderer_classes: list[type[CustomRenderer]] = [CustomRenderer]
+
     def get(self, request) -> Response:
         services: BaseManager[HotelService] = HotelService.objects.all()
         serializer = HotelServiceSerializer(services, many=True)
         return Response(serializer.data)
+    
 
+class GuestsByServiceApiView(APIView):
+    renderer_classes: list[type[CustomRenderer]] = [CustomRenderer]
+
+    def get(self, request) -> Response:
+        guests: BaseManager[Guest] = Guest.objects.filter(bookings__hotel_services__name='sport').distinct()
+        serializer = GuestSerializer(guests, many=True)
+        return Response(serializer.data)
+        
 
 
 @api_view(['GET'])

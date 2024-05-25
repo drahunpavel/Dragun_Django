@@ -1,6 +1,6 @@
 from django.urls import URLPattern, include, path
 
-from .views import GuestApiView, HotelServiceApiView, hello_world
+from .views import GuestApiView, GuestsByServiceApiView, HotelServiceApiView, hello_world
 
 
 guests_patterns: list[URLPattern] = [
@@ -8,6 +8,7 @@ guests_patterns: list[URLPattern] = [
     path('create', GuestApiView.as_view(), name='create'),
     path('update', GuestApiView.as_view(), name='update'),
     path('delete/<int:pk>', GuestApiView.as_view(), name='delete'),
+    path('by_hobby_list', GuestsByServiceApiView.as_view(), name='service_list'),
 ]
 
 
