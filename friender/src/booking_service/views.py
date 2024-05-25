@@ -11,6 +11,8 @@ from django.http import HttpRequest, HttpResponse
 from .forms import AddCommentForm, AddGuestForm, CheckRoomForm
 from .models import Booking, Guest, Hotel, HotelComment, Room
 from django.db import transaction
+from django.views.generic import TemplateView
+
 # def get_hotel_by_name(hotel_name):
 #     hotel = Hotel.objects.filter(name__in=[hotel_name])
 #     if hotel:
@@ -27,8 +29,13 @@ from django.db import transaction
 #     return HttpResponse('home')
 
 
-def home_view(request: HttpRequest) -> HttpResponse:
-    return render(request=request, template_name='home.html')
+# def home_view(request: HttpRequest) -> HttpResponse:
+#     return render(request=request, template_name='home.html')
+'''
+TemplateView - класс представления для отображения шаблонов без данных из бд
+'''
+class HomeView(TemplateView):
+    template_name: str = 'home.html'
 
 
 def hotels_view(request: HttpRequest) -> HttpResponse:
