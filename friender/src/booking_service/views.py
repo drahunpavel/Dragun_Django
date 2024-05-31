@@ -45,8 +45,8 @@ class HomeView(TemplateView):
 
 #* login_required - доступ только для аутентифицированных в админке
 #* permission_requiered - доступ только с правами для просмотра в админке
-@permission_required("booking_service.hotels_view",login_url="/admin/login/")
-@login_required(login_url="/admin/login/")
+# @permission_required("booking_service.hotels_view",login_url="/admin/login/")
+# @login_required(login_url="/admin/login/")
 def hotels_view(request: HttpRequest) -> HttpResponse:
     # hotels = Hotel.objects.all()
     hotels = Hotel.objects.prefetch_related('comments').all()
