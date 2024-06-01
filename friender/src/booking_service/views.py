@@ -112,8 +112,8 @@ def hotel_view(request: HttpRequest, hotel_name: str) -> HttpResponse:
 #* @permission_required("booking_service.hotels_view",login_url="/admin/login/"), в классах используем PermissionRequiredMixin
 #* @login_required(login_url="/admin/login/"), в классах используем LoginRequiredMixin
 class GuestListView(LoginRequiredMixin,PermissionRequiredMixin, ListView):
-    # permission_required = ["booking_service.view_guests"]
-    # login_url = "/admin/login/"
+    permission_required = ["booking_service.view_guests"]
+    login_url = "/admin/login/"
 
     model = Guest
     template_name = 'guest_list.html' 
