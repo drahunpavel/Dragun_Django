@@ -17,7 +17,8 @@ from django.urls import reverse_lazy
 from django.views.generic import DeleteView
 from django.views.generic import ListView
 from django.contrib.auth.decorators import login_required, permission_required
-
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.mixins import PermissionRequiredMixin
 
 # def get_hotel_by_name(hotel_name):
 #     hotel = Hotel.objects.filter(name__in=[hotel_name])
@@ -45,8 +46,8 @@ class HomeView(TemplateView):
 
 #* login_required - доступ только для аутентифицированных в админке
 #* permission_requiered - доступ только с правами для просмотра в админке
-# @permission_required("booking_service.hotels_view",login_url="/admin/login/")
-# @login_required(login_url="/admin/login/")
+@permission_required("booking_service.hotels_view",login_url="/admin/login/")
+@login_required(login_url="/admin/login/")
 def hotels_view(request: HttpRequest) -> HttpResponse:
     # hotels = Hotel.objects.all()
     hotels = Hotel.objects.prefetch_related('comments').all()
@@ -108,8 +109,12 @@ def hotel_view(request: HttpRequest, hotel_name: str) -> HttpResponse:
     context = {'hotel': hotel, 'comments': comment_list, 'comment_form': comment_form}
     return render(request=request, template_name='hotel.html', context=context)
 
+#* @permission_required("booking_service.hotels_view",login_url="/admin/login/"), в классах используем PermissionRequiredMixin
+#* @login_required(login_url="/admin/login/"), в классах используем LoginRequiredMixin
+class GuestListView(LoginRequiredMixin,PermissionRequiredMixin, ListView):
+    # permission_required = ["booking_service.view_guests"]
+    # login_url = "/admin/login/"
 
-class GuestListView(ListView):
     model = Guest
     template_name = 'guest_list.html' 
     context_object_name = 'guests'

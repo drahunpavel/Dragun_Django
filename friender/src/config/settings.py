@@ -52,13 +52,26 @@ INSTALLED_APPS = [
     'debug_toolbar',
     'booking_service',
     'booking_rest_api',
+    'booking_auth_api',
     'phonenumber_field',
     'bootstrap5',
     'crispy_forms',
     'crispy_bootstrap5',
     'django_extensions',
-    'django_filters'
+    'django_filters',
+    'rest_framework',
+    'rest_framework_simplejwt.token_blacklist'
 ]
+
+# todo настройка для работы с токенами
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ),
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',
+    ],
+}
 
 #  Bootstrap 5 в качестве шаблона для crispy-forms
 CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
