@@ -7,8 +7,8 @@ from django.shortcuts import redirect, render
 from datetime import datetime
 from django.db.models import Q
 from django.views import View
-from django.http import HttpRequest, HttpResponse
-from .forms import AddCommentForm, AddGuestForm, AddGuestForm2, CheckRoomForm
+from django.http import HttpRequest, HttpResponse, HttpResponseRedirect
+from .forms import AddCommentForm, AddGuestForm, AddGuestForm2, CheckRoomForm, CustomAuthenticationForm, CustomUserCreationForm
 from .models import Booking, Guest, Hotel, HotelComment, Room
 from django.db import transaction
 from django.views.generic import TemplateView
@@ -19,6 +19,8 @@ from django.views.generic import ListView
 from django.contrib.auth.decorators import login_required, permission_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.mixins import PermissionRequiredMixin
+from django.contrib.auth import login, authenticate
+from django.contrib.auth.base_user import AbstractBaseUser
 
 # def get_hotel_by_name(hotel_name):
 #     hotel = Hotel.objects.filter(name__in=[hotel_name])
@@ -334,3 +336,33 @@ class GuestDeleteView(DeleteView):
     template_name = 'guest_confirm_delete.html'
     success_url = reverse_lazy('guest_list')
 
+# кастомная регистрация\аутентификация
+
+def custom_register_view(request) -> HttpResponseRedirect | HttpResponse:
+    if request.method == 'POST':
+        form = CustomUserCreationForm(request.POST)
+        if form.is_valid():
+            user = form.save()
+            username: str = form.cleaned_data.get('username')
+            password: str = form.cleaned_data.get('password1')
+            user: AbstractBaseUser | None = authenticate(username=username, password=password)
+            login(request, user)
+            return redirect('home')
+    else:
+        form = CustomUserCreationForm()
+    return render(request, 'register.html', {'form': form})
+
+
+def custom_login_view(request) -> HttpResponseRedirect | HttpResponse:
+    if request.method == 'POST':
+        form = CustomAuthenticationForm(data=request.POST)
+        if form.is_valid():
+            username: str = form.cleaned_data.get('username')
+            password: str = form.cleaned_data.get('password')
+            user: AbstractBaseUser | None = authenticate(username=username, password=password)
+            if user is not None:
+                login(request, user)
+                return redirect('home')
+    else:
+        form = CustomAuthenticationForm()
+    return render(request, 'login.html', {'form': form})

@@ -3,6 +3,8 @@ from .validators import validate_yahoo_email
 from .models import Guest, HotelComment
 from django.core.validators import MaxValueValidator, MinValueValidator
 from phonenumber_field.formfields import PhoneNumberField
+from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
+from django.contrib.auth.models import User
 
 class CheckRoomForm(forms.Form):
     room_number = forms.IntegerField()
@@ -57,3 +59,15 @@ class AddCommentForm(forms.ModelForm):
     #     self.fields['text'].widget = forms.Textarea(attrs={'rows': 4, 'cols': 40})
 
 
+
+class CustomUserCreationForm(UserCreationForm):
+    email = forms.EmailField(required=True)
+    class Meta:
+        model = User
+        fields: list[str] = ['username', 'email', 'password1', 'password2']
+
+
+class CustomAuthenticationForm(AuthenticationForm):
+    class Meta:
+        model = User
+        fields: list[str] = ['username', 'password']
