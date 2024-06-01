@@ -48,8 +48,8 @@ class HomeView(TemplateView):
 
 #* login_required - доступ только для аутентифицированных в админке
 #* permission_requiered - доступ только с правами для просмотра в админке
-@permission_required("booking_service.hotels_view",login_url="/admin/login/")
-@login_required(login_url="/admin/login/")
+@permission_required("booking_service.hotels_view",login_url=reverse_lazy("login"))
+@login_required(login_url=reverse_lazy("login"))
 def hotels_view(request: HttpRequest) -> HttpResponse:
     # hotels = Hotel.objects.all()
     hotels = Hotel.objects.prefetch_related('comments').all()
@@ -115,7 +115,10 @@ def hotel_view(request: HttpRequest, hotel_name: str) -> HttpResponse:
 #* @login_required(login_url="/admin/login/"), в классах используем LoginRequiredMixin
 class GuestListView(LoginRequiredMixin,PermissionRequiredMixin, ListView):
     permission_required = ["booking_service.view_guests"]
-    login_url = "/admin/login/"
+    login_url = None
+
+    def get_login_url(self):
+        return reverse_lazy('login')
 
     model = Guest
     template_name = 'guest_list.html' 
