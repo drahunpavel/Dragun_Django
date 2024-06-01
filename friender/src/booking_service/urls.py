@@ -1,7 +1,7 @@
 from django.urls import URLPattern, path
 from .views import (DeleteBookingView, AddGuestView, GuestDeleteView, GuestListView, book_room_view,
                     check_room_availability_view,
-                    HomeView, custom_login_view, custom_register_view, hotel_view,
+                    HomeView, custom_login_view, custom_logout_view, custom_register_view, hotel_view,
                     hotels_view, users_view)
 
 
@@ -24,4 +24,5 @@ urlpatterns: list[URLPattern] = [
 
     path('register', custom_register_view, name='register'),
     path('login', custom_login_view, name='login'),
+    path('logout', custom_logout_view, name='logout'),
 ]

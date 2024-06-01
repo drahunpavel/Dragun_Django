@@ -19,7 +19,7 @@ from django.views.generic import ListView
 from django.contrib.auth.decorators import login_required, permission_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.mixins import PermissionRequiredMixin
-from django.contrib.auth import login, authenticate
+from django.contrib.auth import login, authenticate, logout
 from django.contrib.auth.base_user import AbstractBaseUser
 
 # def get_hotel_by_name(hotel_name):
@@ -369,3 +369,9 @@ def custom_login_view(request) -> HttpResponseRedirect | HttpResponse:
     else:
         form = CustomAuthenticationForm()
     return render(request, 'login.html', {'form': form})
+
+
+
+def custom_logout_view(request) -> HttpResponseRedirect:
+    logout(request)
+    return redirect('home')
