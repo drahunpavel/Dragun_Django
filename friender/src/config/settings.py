@@ -179,6 +179,12 @@ INTERNAL_IPS = [
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
 
 
+CACHES: dict[str, dict[str, str]] = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.db.DatabaseCache',
+        'LOCATION': 'my_cache_table',
+    }
+}
 
 
 # todo настройка для автоинкрементированных ключей. Если используются uuid - не нужна
