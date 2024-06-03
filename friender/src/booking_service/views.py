@@ -1,5 +1,6 @@
 from multiprocessing.managers import BaseManager
 from typing import Optional
+from django.db.models.manager import BaseManager
 from django.utils import timezone
 from datetime import timedelta
 # from django.http import JsonResponse
@@ -22,6 +23,9 @@ from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.contrib.auth import login, authenticate, logout
 from django.contrib.auth.base_user import AbstractBaseUser
 from django.views.decorators.cache import cache_page
+from django.utils.decorators import method_decorator
+from django.core.cache import cache
+
 # def get_hotel_by_name(hotel_name):
 #     hotel = Hotel.objects.filter(name__in=[hotel_name])
 #     if hotel:
@@ -57,7 +61,8 @@ class HomeView(TemplateView):
 @cache_page(60 * 30)  # кэширование конкретной вьюшки на N минут
 def hotels_view(request: HttpRequest) -> HttpResponse:
     # hotels = Hotel.objects.all()
-    hotels = Hotel.objects.prefetch_related('comments').all()
+    hotels: BaseManager[Hotel] = Hotel.objects.prefetch_related(
+        'comments').all()
     # hotels = Hotel.objects.prefetch_related(Prefetch('comments', queryset=HotelComment.objects.all())).all()
 
     # hotel_comments_dict = {}
@@ -135,14 +140,18 @@ class GuestListView(LoginRequiredMixin, PermissionRequiredMixin, ListView):
     context_object_name = 'guests'
     paginate_by = 3
 
+    @method_decorator(cache_page(60 * 20, cache='filesystem'))
+    def dispatch(self, *args, **kwargs) -> HttpResponse:
+        return super().dispatch(*args, **kwargs)
+
 
 def users_view(request: HttpRequest) -> HttpResponse:
-    guests = Guest.objects.all()
+    guests: BaseManager[Guest] = Guest.objects.all()
 
     guests_list = []
 
     for guest in guests:
-        bookings = Booking.objects.filter(
+        bookings: BaseManager[Booking] = Booking.objects.filter(
             guest_id=guest.id).prefetch_related('hotel_services')
         services_list = []
         for booking in bookings:
@@ -305,30 +314,36 @@ class DeleteBookingView(View):
 
 
 # * вьюшка для добавления гостя через класс CreateView. Форма связана с моделью Guest
-# class AddGuestView(CreateView):
-#     model = Guest
-#     form_class = AddGuestForm2
-#     template_name = 'add_guest.html'
-#     success_url = reverse_lazy('guest_list')
-
-# * вьюшка для добавления гостя через класс FormView. Форма НЕ связана с моделью Guest
-class AddGuestView(FormView):
+class AddGuestView(CreateView):
+    model = Guest
     form_class = AddGuestForm
     template_name = 'add_guest.html'
     success_url = reverse_lazy('guest_list')
 
-    def form_valid(self, form) -> HttpResponse:
-        first_name = form.cleaned_data['first_name']
-        last_name = form.cleaned_data['last_name']
-        age = form.cleaned_data['age']
-        sex = form.cleaned_data['sex']
-        email = form.cleaned_data['email']
-        phone = form.cleaned_data['phone']
+    def form_valid(self, form):
+        response: HttpResponse = super().form_valid(form)
+        guest = form.instance
+        cache.delete('guest_list')
+        return response
 
-        Guest.objects.create(first_name=first_name, last_name=last_name,
-                             age=age, sex=sex, email=email, phone=phone)
+# * вьюшка для добавления гостя через класс FormView. Форма НЕ связана с моделью Guest
+# class AddGuestView(FormView):
+#     form_class = AddGuestForm2
+#     template_name = 'add_guest.html'
+#     success_url = reverse_lazy('guest_list')
 
-        return super().form_valid(form)
+#     def form_valid(self, form) -> HttpResponse:
+#         first_name = form.cleaned_data['first_name']
+#         last_name = form.cleaned_data['last_name']
+#         age = form.cleaned_data['age']
+#         sex = form.cleaned_data['sex']
+#         email = form.cleaned_data['email']
+#         phone = form.cleaned_data['phone']
+
+#         Guest.objects.create(first_name=first_name, last_name=last_name,
+#                              age=age, sex=sex, email=email, phone=phone)
+
+#         return super().form_valid(form)
 
 
 # * Рабочий вариант через класс View
