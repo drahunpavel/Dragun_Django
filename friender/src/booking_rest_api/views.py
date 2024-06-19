@@ -7,10 +7,13 @@ from rest_framework import status
 from rest_framework.decorators import api_view
 
 from .renderers import CustomRenderer
-from .serializers import GuestSerializer, HotelServiceSerializer
-from booking_service.models import Guest, HotelService
+from .serializers import GuestSerializer, HotelSerializer, HotelServiceSerializer
+from booking_service.models import Guest, Hotel, HotelService
 from rest_framework import viewsets
 from rest_framework import generics
+from rest_framework.permissions import IsAuthenticated,AllowAny
+from  django_filters.rest_framework import DjangoFilterBackend
+from rest_framework.filters import SearchFilter, OrderingFilter
 
 # class GuestApiView(APIView):
 #     renderer_classes: list[type[CustomRenderer]] = [CustomRenderer]
@@ -100,5 +103,22 @@ class GuestsByServiceApiViewSet(generics.ListAPIView):
         return Guest.objects.filter(bookings__hotel_services__name='sport').distinct()
 
 @api_view(['GET'])
-def hello_world(requst) -> Response:
+def hello_world(_) -> Response:
     return Response({"message": "Hello, world!"})
+
+
+
+# todo Настройка фильтрации с использованием django-filter
+# вьюша с возможностью фильтрации, поиска 
+# с указанием полей
+class HotelApiViewSet(generics.ListAPIView):
+    permission_classes = [IsAuthenticated]
+    renderer_classes: list[type[CustomRenderer]] = [CustomRenderer]
+    queryset = Hotel.objects.all()
+    serializer_class = HotelSerializer
+    filter_backends = [DjangoFilterBackend,SearchFilter]
+    filterset_fields = ['name', 'stars']
+    search_fields = ['name', 'stars']
+    ordering_fields = ['stars']
+
+#! Посмотреть настройку базовой фильтрации с использованием стандартных фильтров DRF

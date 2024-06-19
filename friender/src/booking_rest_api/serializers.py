@@ -2,7 +2,7 @@ from multiprocessing.managers import BaseManager
 from rest_framework import serializers
 from django.core.validators import MaxValueValidator, MinValueValidator
 
-from booking_service.models import SEX_CHOICES, Guest, HotelService
+from booking_service.models import SEX_CHOICES, Guest, Hotel, HotelService
 
 #* сериализатор для модели Guest (не связан с моделью)
 class GuestSerializer(serializers.Serializer):
@@ -48,3 +48,9 @@ class HotelServiceSerializer(serializers.ModelSerializer):
     class Meta:
         model = HotelService
         fields: list[str] = ['id', 'name', 'description']
+
+
+class HotelSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Hotel
+        fields = '__all__'

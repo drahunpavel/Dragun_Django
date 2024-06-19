@@ -1,6 +1,6 @@
 from django.urls import URLPattern, include, path
 
-from .views import ( GuestApiViewSet, GuestsByServiceApiViewSet, HotelServiceApiViewSet, 
+from .views import ( GuestApiViewSet, GuestsByServiceApiViewSet, HotelApiViewSet, HotelServiceApiViewSet, 
                      hello_world)
 
 
@@ -19,8 +19,13 @@ services_patterns: list[URLPattern] = [
     path('list', HotelServiceApiViewSet.as_view(), name='list')
 ]
 
+hotels_patterns: list[URLPattern] = [
+    path('', HotelApiViewSet.as_view(), name='hotels'),
+]
+
 urlpatterns: list[URLPattern] = [
     path('some_url_example', hello_world),
     path('guests/', include((guests_patterns, 'guests'))),
     path('services/', include((services_patterns, 'services'))),
+    path('hotels/', include((hotels_patterns, 'hotels'))),
 ]
