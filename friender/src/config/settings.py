@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.0/ref/settings/
 """
 
+from datetime import timedelta
 import os
 from pathlib import Path
 from dotenv import load_dotenv
@@ -63,14 +64,27 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt.token_blacklist'
 ]
 
-# todo настройка для работы с токенами
 REST_FRAMEWORK = {
+    # todo настройка для работы с токенами
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticated',
     ],
+     # todo настройка для фильттрации данных
+    'DEFAULT_FILTER_BACKENDS': [
+        'django_filters.rest_framework.DjangoFilterBackend'
+    ],
+    # todo настройка глобальной пагинации  (применяет пагинацию ко всем API-представлениям, которые возвращают списки объектов)
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.LimitOffsetPagination',
+    'PAGE_SIZE': 5
+}
+
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=120),  #todo Время жизни access-токена
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),    #todo Время жизни refresh-токена
+    'AUTH_HEADER_TYPES': ('Bearer',),
 }
 
 #  Bootstrap 5 в качестве шаблона для crispy-forms

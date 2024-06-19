@@ -14,6 +14,7 @@ from rest_framework import generics
 from rest_framework.permissions import IsAuthenticated,AllowAny
 from  django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter, OrderingFilter
+from .paginations import CustomPagination
 
 # class GuestApiView(APIView):
 #     renderer_classes: list[type[CustomRenderer]] = [CustomRenderer]
@@ -120,5 +121,6 @@ class HotelApiViewSet(generics.ListAPIView):
     filterset_fields = ['name', 'stars']
     search_fields = ['name', 'stars']
     ordering_fields = ['stars']
+    pagination_class = CustomPagination
 
 #! Посмотреть настройку базовой фильтрации с использованием стандартных фильтров DRF
