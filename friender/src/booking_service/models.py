@@ -1,6 +1,8 @@
 from django.db import models
 from django.core.validators import MaxValueValidator, MinValueValidator
 from phonenumber_field.modelfields import PhoneNumberField
+from django.core.validators import FileExtensionValidator
+from .validators import validate_doc_extension
 
 SEX_CHOICES = [
     ("m", "male"),
@@ -75,6 +77,10 @@ class Profile(models.Model):
     serial_number = models.CharField(null=True, max_length=30)
     guest = models.OneToOneField(
         Guest, on_delete=models.CASCADE, related_name="profile")
+    info = models.FileField(
+        null=True, blank=True, upload_to="profile_info/",
+        validators=[FileExtensionValidator(allowed_extensions=['doc']), validate_doc_extension]
+    )
 
     def __str__(self):
         return f"profile: {self.id_card}"
