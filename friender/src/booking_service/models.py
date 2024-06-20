@@ -19,7 +19,6 @@ ROOM_TYPE_CHOICES = [
 ]
 
 
-
 # Guest
 # Profile
 # Booking
@@ -70,7 +69,8 @@ class HotelOwner(Guest):
 
 
 class Profile(models.Model):
-    photo = models.ImageField(null=True, blank=True)
+    photo = models.ImageField(
+        null=True, blank=True, verbose_name="User photo", upload_to="users_photo/")
     id_card = models.IntegerField(null=True)
     serial_number = models.CharField(null=True, max_length=30)
     guest = models.OneToOneField(
@@ -90,6 +90,8 @@ class Hotel(models.Model):
     phone = PhoneNumberField(null=False, blank=False, unique=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    photo = models.ImageField(
+        null=True, verbose_name="hotel_photo", upload_to="hotels_photo/", blank=True)
 
     class Meta:
         indexes = [

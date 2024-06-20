@@ -1,6 +1,6 @@
 from django import forms
 from .validators import validate_yahoo_email
-from .models import Guest, HotelComment
+from .models import Guest, HotelComment, Profile
 from django.core.validators import MaxValueValidator, MinValueValidator
 from phonenumber_field.formfields import PhoneNumberField
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
@@ -21,6 +21,12 @@ class AddGuestForm(forms.ModelForm):
     class Meta:
         model = Guest
         fields: list[str] = ['first_name', 'last_name', 'age', 'sex', 'email', 'phone']
+
+#todo ProfileForm, для заполнения данных гостя при добавлении 
+class ProfileForm(forms.ModelForm):
+    class Meta:
+        model = Profile
+        fields = ['photo', 'id_card', 'serial_number']
 
 #* Форма AddGuestForm не наследуется от модели
 class AddGuestForm2(forms.Form):

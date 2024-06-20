@@ -9,7 +9,7 @@ from datetime import datetime
 from django.db.models import Q
 from django.views import View
 from django.http import HttpRequest, HttpResponse, HttpResponseRedirect
-from .forms import AddCommentForm, AddGuestForm, AddGuestForm2, CheckRoomForm, CustomAuthenticationForm, CustomUserCreationForm
+from .forms import AddCommentForm, AddGuestForm, AddGuestForm2, CheckRoomForm, CustomAuthenticationForm, CustomUserCreationForm, ProfileForm
 from .models import Booking, Guest, Hotel, HotelComment, Room
 from django.db import transaction
 from django.views.generic import TemplateView
@@ -320,11 +320,46 @@ class AddGuestView(CreateView):
     template_name = 'add_guest.html'
     success_url = reverse_lazy('guest_list')
 
+    #todo будет создан объект Guest и связанный с ним объект Profile
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        if self.request.POST:
+            context['profile_form'] = ProfileForm(self.request.POST, self.request.FILES)
+        else:
+            context['profile_form'] = ProfileForm()
+        return context
+
+
     def form_valid(self, form):
-        response: HttpResponse = super().form_valid(form)
-        guest = form.instance
-        cache.delete('guest_list')
-        return response
+        context = self.get_context_data()
+        profile_form = context['profile_form']
+
+        print('POST:', self.request.POST)
+        print('FILES:', self.request.FILES)
+        print('Profile Form Valid:', profile_form.is_valid())
+        print('Profile Form Errors:', profile_form.errors)
+
+        if profile_form.is_valid():
+            # сохраняем объект Guest
+            guest = form.save()
+
+            # соъраняем объект Profile
+            profile = profile_form.save(commit=False)
+            profile.guest = guest
+            profile.save()
+
+            # Очистка кэша
+            cache.delete('guest_list')
+
+            return super().form_valid(form)
+        else:
+            return self.form_invalid(form)
+        
+    def form_invalid(self, form):
+        context = self.get_context_data(form=form)
+        context['profile_form'] = ProfileForm(self.request.POST, self.request.FILES)
+        return self.render_to_response(context)
+
 
 # * вьюшка для добавления гостя через класс FormView. Форма НЕ связана с моделью Guest
 # class AddGuestView(FormView):
