@@ -61,7 +61,8 @@ INSTALLED_APPS = [
     'django_extensions',
     'django_filters',
     'rest_framework',
-    'rest_framework_simplejwt.token_blacklist'
+    'rest_framework_simplejwt.token_blacklist',
+    'django_celery_results'
 ]
 
 REST_FRAMEWORK = {
@@ -219,3 +220,24 @@ CACHES: dict[str, dict[str, str]] = {
 
 # todo настройка для автоинкрементированных ключей. Если используются uuid - не нужна
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+
+#todo Celery
+
+CELERY_BROKER_URL = 'amqp://localhost'  # URL брокера RabbitMQ
+CELERY_RESULT_BACKEND = 'django-db'  # Использование базы данных Django для хранения результатов задач
+
+# REDIS_HOST = '127.0.0.1'
+# REDIS_PORT = '6379'
+# CELERY_BROKER_URL = 'redis://' + REDIS_HOST + ":" + REDIS_PORT + '/0'
+# CELERY_BROKER_TRANSPORT_OPTIONS = {'visibility_timeout': 3600}
+
+CELERY_ACCEPT_CONTENT = ['application/json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+
+CELERY_IMPORTS = ('booking_service.tasks',) # Путь к  задачам Celery
+
+
+# Настройки Flower
+FLOWER_PORT = 5555  # Порт для Flower
