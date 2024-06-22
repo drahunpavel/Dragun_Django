@@ -170,3 +170,10 @@ class BookingService(models.Model):
 
     def __str__(self):
         return f"Booking id: {self.booking.id} ||| Service: {self.service.name}"
+
+
+class Queue(models.Model):
+    value = models.IntegerField(unique=True)
+
+    def __str__(self):
+        return str(self.value)
