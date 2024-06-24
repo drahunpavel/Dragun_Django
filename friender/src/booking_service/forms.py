@@ -6,14 +6,15 @@ from phonenumber_field.formfields import PhoneNumberField
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib.auth.models import User
 
+# кастомная форма для проверки забронированной комнаты
 class CheckRoomForm(forms.Form):
     room_number = forms.IntegerField()
     guest = forms.CharField(max_length=50, initial='Alice Cooper')
-    hotel = forms.CharField(max_length=50, initial='Hotel_Hotel')
+    hotel = forms.CharField(max_length=50, initial='Hilton Amsterdam Airport Schiphol')
     check_in_date = forms.DateTimeField()
     check_out_date = forms.DateTimeField()
 
-#* Форма AddGuestForm наследуется от модели
+# Форма AddGuestForm наследуется от модели Guest
 class AddGuestForm(forms.ModelForm):
 
     email = forms.EmailField(validators=[validate_yahoo_email])
@@ -22,13 +23,13 @@ class AddGuestForm(forms.ModelForm):
         model = Guest
         fields: list[str] = ['first_name', 'last_name', 'age', 'sex', 'email', 'phone']
 
-#todo ProfileForm, для заполнения данных гостя при добавлении 
+# ProfileForm, для заполнения данных гостя при добавлении, наследуется от модели Profile
 class ProfileForm(forms.ModelForm):
     class Meta:
         model = Profile
         fields = ['photo', 'id_card', 'serial_number']
 
-#* Форма AddGuestForm не наследуется от модели
+# Кастомная форма AddGuestForm, не наследуется от модели
 class AddGuestForm2(forms.Form):
     first_name = forms.CharField(max_length=30, required=False)
     last_name = forms.CharField(max_length=50)
@@ -41,15 +42,10 @@ class AddGuestForm2(forms.Form):
     phone = PhoneNumberField()
 
 
-
-
-#* форма AddCommentForm связана с моделью HotelComment
+# форма AddCommentForm связана с моделью HotelComment
 class AddCommentForm(forms.ModelForm):
-    # guest = forms.CharField(label='Your Name', max_length=100)
-
     class Meta:
         model = HotelComment
-        # fields: list[str] = ['guest', 'text']
         fields: list[str] = ['text']
         label: dict[str, str] = {
             'text': 'Message'

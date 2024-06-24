@@ -68,6 +68,7 @@ class GuestApiViewSet(viewsets.ModelViewSet):
         return Guest.objects.all()
     
     def get_object(self):
+        # получения одного конкретного объекта по первичному ключу (pk)
         pk = self.kwargs['pk']
         print('pk', pk)
         return get_object_or_404(Guest, pk=pk)

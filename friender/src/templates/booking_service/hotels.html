@@ -28,7 +28,9 @@
                             <br>
                             <h5>Comments</h5>
                             {% for comment in item.comments %}
+                            {% if comment.guest.first_name %}
                             <p><b>{{comment.guest.first_name}}</b>: {{comment.text}}</p>
+                            {% endif %}
                             {% endfor %}
                         </div>
                     </div>

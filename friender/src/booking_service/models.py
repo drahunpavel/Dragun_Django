@@ -8,11 +8,6 @@ SEX_CHOICES = [
     ("m", "male"),
     ("f", "female"),
 ]
-# ROOM_TYPE_CHOICES = {
-#     "s": "single",
-#     "d": "double",
-#     "o": "other"
-# }
 
 ROOM_TYPE_CHOICES = [
     ("s", "single"),
@@ -30,15 +25,7 @@ ROOM_TYPE_CHOICES = [
 # BookingService
 # Comment
 
-'''
-Каждый гость (Guest) может сделать несколько бронирований (Booking), но каждое бронирование принадлежит только одному гостю
-У каждого гостя есть один профиль (Profile), и у каждого профиля есть только один гость
-Каждое бронирование (Booking) может включать несколько дополнительных услуг (BookingService)
-Каждый отель (Hotel) может иметь несколько номеров (Room)
-Каждый отель (Hotel) может предоставлять несколько дополнительных услуг (HotelService)
-Каждое бронирование (Booking) может включать несколько дополнительных услуг (HotelService), и каждая дополнительная услуга может быть включена в несколько бронирований
-Каждый гость (Guest) может оставлять комментарии (HotelComment) к разным Hotel
-'''
+
 
 
 class Guest(models.Model):
@@ -121,7 +108,7 @@ class Room(models.Model):
     is_booked = models.BooleanField(default=False)
 
     def __str__(self) -> str:
-        return f'{self.number}'
+        return f'{self.number} | {self.hotel.name}'
 
 
 class HotelComment(models.Model):
@@ -160,7 +147,7 @@ class HotelService(models.Model):
     description = models.TextField()
 
     def __str__(self):
-        return f"Hotel: {self.hotel.name} ||| Service: {self.name}"
+        return f"{self.name}"
 
 
 class BookingService(models.Model):

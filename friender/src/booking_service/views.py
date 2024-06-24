@@ -3,17 +3,16 @@ from typing import Optional
 from django.db.models.manager import BaseManager
 from django.utils import timezone
 from datetime import timedelta
-# from django.http import JsonResponse
 from django.shortcuts import redirect, render
 from datetime import datetime
 from django.db.models import Q
 from django.views import View
 from django.http import HttpRequest, HttpResponse, HttpResponseRedirect
-from .forms import AddCommentForm, AddGuestForm, AddGuestForm2, CheckRoomForm, CustomAuthenticationForm, CustomUserCreationForm, ProfileForm
-from .models import Booking, Guest, Hotel, HotelComment, Room
+from .forms import AddCommentForm, AddGuestForm, CheckRoomForm, CustomAuthenticationForm, CustomUserCreationForm, ProfileForm
+from .models import Booking, Guest, Hotel, HotelComment, Profile, Room
 from django.db import transaction
 from django.views.generic import TemplateView
-from django.views.generic import CreateView, FormView
+from django.views.generic import CreateView
 from django.urls import reverse_lazy
 from django.views.generic import DeleteView
 from django.views.generic import ListView
@@ -25,29 +24,10 @@ from django.contrib.auth.base_user import AbstractBaseUser
 from django.views.decorators.cache import cache_page
 from django.utils.decorators import method_decorator
 from django.core.cache import cache
+from django.db.models import Prefetch
+import logging
 
-# def get_hotel_by_name(hotel_name):
-#     hotel = Hotel.objects.filter(name__in=[hotel_name])
-#     if hotel:
-#         return hotel
-#     else:
-#         return None
-# for hotel in hotels:
-#     if hotel['name'] == hotel_name:
-#         return hotel
-# return None
-
-
-# def home_view(request):
-#     return HttpResponse('home')
-
-
-# def home_view(request: HttpRequest) -> HttpResponse:
-#     return render(request=request, template_name='home.html')
-'''
-TemplateView - класс представления для отображения шаблонов без данных из бд
-'''
-
+logger = logging.getLogger(__name__)
 
 class HomeView(TemplateView):
     template_name: str = 'home.html'
@@ -58,29 +38,20 @@ class HomeView(TemplateView):
 
 @permission_required("booking_service.hotels_view", login_url=reverse_lazy("login"))
 @login_required(login_url=reverse_lazy("login"))
-@cache_page(60 * 30)  # кэширование конкретной вьюшки на N минут
+@cache_page(60 * 1)  # кэширование конкретной вьюшки на N минут
 def hotels_view(request: HttpRequest) -> HttpResponse:
-    # hotels = Hotel.objects.all()
-    hotels: BaseManager[Hotel] = Hotel.objects.prefetch_related(
-        'comments').all()
-    # hotels = Hotel.objects.prefetch_related(Prefetch('comments', queryset=HotelComment.objects.all())).all()
+    print('Check cache hotels_view')
+    hotels_with_comments = Hotel.objects.prefetch_related(
+        # Prefetch - предварительная загрузка связанных объектов
+        Prefetch('comments', queryset=HotelComment.objects.all())
+    ).all()[:10]
+    
+    hotels_data = [
+        {'hotel': hotel, 'comments': hotel.comments.all()}
+        for hotel in hotels_with_comments
+    ]
 
-    # hotel_comments_dict = {}
-
-    # for hotel in hotels:
-    #     hotel_comments_dict[hotel.id] = list(hotel.comments.all())
-
-    hotels_list = []
-
-    # for hotel in hotels:
-    #     hotels_list.append({'hotel': hotel, 'comments': hotel_comments_dict.get(hotel.id, [])})
-
-    for hotel in hotels:
-        # comments = HotelComment.objects.filter(hotel__name=hotel.name)
-        # hotels_list.append({'hotel': hotel, 'comments': comments})
-        hotels_list.append({'hotel': hotel, 'comments': hotel.comments.all()})
-
-    context = {'hotels': hotels_list}
+    context = {'hotels': hotels_data}
 
     return render(request=request, template_name='hotels.html', context=context)
 
@@ -91,63 +62,44 @@ def hotel_view(request: HttpRequest, hotel_name: str) -> HttpResponse:
     if not hotel:
         return render(request=request, template_name='404.html')
 
-    comments: BaseManager[HotelComment] = HotelComment.objects.filter(
-        hotel__name=hotel_name)
-    comment_list: list = []
+    comments = HotelComment.objects.filter(hotel=hotel).select_related('guest')
 
+    # Создание формы AddCommentForm, AddCommentForm наследуется от модели HotelComment
     if request.method == 'POST':
         comment_form = AddCommentForm(request.POST)
         if comment_form.is_valid():
-            # костыль, предполагаем, что зарег пользователь в бд оставляет коммент
-            guest: Guest = Guest.objects.get(
-                first_name='Jacob', last_name='Collins')
-            '''
-            commit=True по умолчанию, сохраняет изменения в базу данных и возвращает экземпляр модели
-            commit=False создает объект модели и заполняет его данными из формы, но не сохраняет его в базу данных.
-            позволяет изменить данные перед сохранением
-            '''
+             # костыль, предполагаем, что зарег пользователь в бд оставляет коммент
+            guest = Guest.objects.get(
+                first_name='Alice', last_name='Cooper'
+            )
             new_comment = comment_form.save(commit=False)
             new_comment.guest = guest
             new_comment.hotel = hotel
             new_comment.save()
-
             return redirect('hotel', hotel_name=hotel_name)
     else:
         comment_form = AddCommentForm()
 
-    for comment in comments:
-        guest_name: str | None = comment.guest.first_name
-        comment_text: str | None = comment.text
-        comment_list.append({'name': guest_name, 'text': comment_text})
+    # Формирование списка комментов
+    # + исключение комментов удаленных пользователей
+    comment_list = [{'name': comment.guest.first_name, 'text': comment.text} 
+                    for comment in comments 
+                    if comment.guest and comment.guest.first_name]
 
-    context = {'hotel': hotel, 'comments': comment_list,
-               'comment_form': comment_form}
-    return render(request=request, template_name='hotel.html', context=context)
+    context = {
+        'hotel': hotel,
+        'comments': comment_list,
+        'comment_form': comment_form,
+    }
+
+    return render(request, 'hotel.html', context)
 
 # * @permission_required("booking_service.hotels_view",login_url="/admin/login/"), в классах используем PermissionRequiredMixin
 # * @login_required(login_url="/admin/login/"), в классах используем LoginRequiredMixin
 
 
-class GuestListView(LoginRequiredMixin, PermissionRequiredMixin, ListView):
-    permission_required = ["booking_service.view_guests"]
-    login_url = None
-
-    def get_login_url(self):
-        return reverse_lazy('login')
-
-    model = Guest
-    template_name = 'guest_list.html'
-    context_object_name = 'guests'
-    paginate_by = 3
-
-    @method_decorator(cache_page(60 * 20, cache='filesystem'))
-    def dispatch(self, *args, **kwargs) -> HttpResponse:
-        return super().dispatch(*args, **kwargs)
-
-
 def users_view(request: HttpRequest) -> HttpResponse:
     guests: BaseManager[Guest] = Guest.objects.all()
-
     guests_list = []
 
     for guest in guests:
@@ -194,8 +146,8 @@ def book_room_view(request: HttpRequest, hotel_name: str, user_id: int, room_num
 
     # транзакционное изменение
     with transaction.atomic():
-        # * проверка, есть ли актуальная бронь на данный номер в данном отеле
-        # * exists - проверяет наличие объектов в QuerySet, возвращает True\False
+        # проверка, есть ли актуальная бронь на данный номер в данном отеле
+        # exists - проверяет наличие объектов в QuerySet, возвращает True\False
         if Booking.objects.filter(hotel=hotel, room=room).exists():
             context['info'] = f'hotel room: {str(room_number)} booked'
             return render(request, 'book.html', context)
@@ -210,11 +162,11 @@ def book_room_view(request: HttpRequest, hotel_name: str, user_id: int, room_num
         )
         room.is_booked = True
         room.save()
-        # Room.objects.filter(number=room.number).update(is_booked=True)
 
     return render(request, 'book.html', context)
 
 
+# относится к check_room_availability_view
 def render_check_room_view(request: HttpRequest, error: str = '') -> HttpResponse:
     form = CheckRoomForm()
     context = {
@@ -223,18 +175,19 @@ def render_check_room_view(request: HttpRequest, error: str = '') -> HttpRespons
     }
     return render(request, 'check_room_availability.html', context)
 
-
+# относится к check_room_availability_view
 def get_guest_by_full_name(full_name: str) -> Optional[Guest]:
     first_name, last_name = full_name.split()
     return Guest.objects.get(Q(first_name=first_name) & Q(last_name=last_name))
 
-
+# относится к check_room_availability_view
 def get_room_by_number_and_hotel(room_number: int, hotel_name: str) -> Room:
     return Room.objects.get(hotel__name=hotel_name, number=room_number)
 
-
+# вьюшка проверки брони
 def check_room_availability_view(request: HttpRequest) -> HttpResponse:
     if request.method == "POST":
+        # CheckRoomForm не связана с моделью
         check_room_form = CheckRoomForm(request.POST)
         if check_room_form.is_valid():
             room_number = int(request.POST.get('room_number'))
@@ -271,6 +224,7 @@ def check_room_availability_view(request: HttpRequest) -> HttpResponse:
             ).exists()
 
             if not is_room_booked:
+                # транзакционный контекст для обеспечения атомарности операций
                 with transaction.atomic():
                     Booking.objects.create(
                         guest=guest,
@@ -301,7 +255,7 @@ class DeleteBookingView(View):
         }
         try:
             with transaction.atomic():
-                # * select_for_update - блокировка записи бронирования
+                # select_for_update - блокировка записи бронирования
                 booking: Booking = Booking.objects.select_for_update().get(id=booking_id)
                 booking.delete()
                 context['info'] = 'Deleted'
@@ -313,22 +267,22 @@ class DeleteBookingView(View):
         return render(request, self.template_name, context)
 
 
-# * вьюшка для добавления гостя через класс CreateView. Форма связана с моделью Guest
+# вьюшка для добавления гостя через класс CreateView. Форма связана с моделью Guest
 class AddGuestView(CreateView):
     model = Guest
     form_class = AddGuestForm
     template_name = 'add_guest.html'
     success_url = reverse_lazy('guest_list')
 
-    #todo будет создан объект Guest и связанный с ним объект Profile
+    # будет создан объект Guest и связанный с ним объект Profile
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         if self.request.POST:
-            context['profile_form'] = ProfileForm(self.request.POST, self.request.FILES)
+            context['profile_form'] = ProfileForm(
+                self.request.POST, self.request.FILES)
         else:
             context['profile_form'] = ProfileForm()
         return context
-
 
     def form_valid(self, form):
         context = self.get_context_data()
@@ -354,14 +308,15 @@ class AddGuestView(CreateView):
             return super().form_valid(form)
         else:
             return self.form_invalid(form)
-        
+
     def form_invalid(self, form):
         context = self.get_context_data(form=form)
-        context['profile_form'] = ProfileForm(self.request.POST, self.request.FILES)
+        context['profile_form'] = ProfileForm(
+            self.request.POST, self.request.FILES)
         return self.render_to_response(context)
 
 
-# * вьюшка для добавления гостя через класс FormView. Форма НЕ связана с моделью Guest
+# вьюшка для добавления гостя через класс FormView. Форма НЕ связана с моделью Guest
 # class AddGuestView(FormView):
 #     form_class = AddGuestForm2
 #     template_name = 'add_guest.html'
@@ -381,7 +336,7 @@ class AddGuestView(CreateView):
 #         return super().form_valid(form)
 
 
-# * Рабочий вариант через класс View
+# Рабочий вариант через класс View
 # class AddGuestView(View):
 #     template_name: str = 'add_guest.html'
 
@@ -402,8 +357,27 @@ class GuestDeleteView(DeleteView):
     template_name = 'guest_confirm_delete.html'
     success_url = reverse_lazy('guest_list')
 
-# кастомная регистрация\аутентификация
 
+# LoginRequiredMixin - заставляет пользователей входить в систему для просмотра
+# PermissionRequiredMixin - проверяет наличие прав у пользователя
+class GuestListView(LoginRequiredMixin, PermissionRequiredMixin, ListView):
+    permission_required = ["booking_service.view_guests"] # доступно только для пользователя с правами view_guests
+    # login_url = None перенаправление пользователя, здесь используем get_login_url
+
+    # куда будет перенаправлен пользователь без аутентификации
+    def get_login_url(self):
+        return reverse_lazy('login')
+
+    model = Guest
+    template_name = 'guest_list.html'
+    context_object_name = 'guests' # имя переменной контекста для работы в шаблоне 
+    paginate_by = 3
+
+    # @method_decorator(cache_page(60 * 20, cache='filesystem'))
+    def dispatch(self, *args, **kwargs) -> HttpResponse: # метод отвечает за обработку запроса (get, post)
+        return super().dispatch(*args, **kwargs)
+
+#* кастомная регистрация\аутентификация
 
 def custom_register_view(request) -> HttpResponseRedirect | HttpResponse:
     if request.method == 'POST':

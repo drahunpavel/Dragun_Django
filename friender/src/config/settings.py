@@ -206,16 +206,16 @@ INTERNAL_IPS = [
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
 
 
-CACHES: dict[str, dict[str, str]] = {
-    'default': {
-        'BACKEND': 'django.core.cache.backends.db.DatabaseCache',  # кэширование ДБ
-        'LOCATION': 'my_cache_table',
-    },
-    'filesystem': {
-        'BACKEND': 'django.core.cache.backends.filebased.FileBasedCache',
-        'LOCATION': '/var/tmp/django_cache',
-    }
-}
+# CACHES: dict[str, dict[str, str]] = {
+#     'default': {
+#         'BACKEND': 'django.core.cache.backends.db.DatabaseCache',  # кэширование БД
+#         'LOCATION': 'my_cache_table',
+#     },
+#     'filesystem': {
+#         'BACKEND': 'django.core.cache.backends.filebased.FileBasedCache',
+#         'LOCATION': '/var/tmp/django_cache',
+#     }
+# }
 
 
 # todo настройка для автоинкрементированных ключей. Если используются uuid - не нужна
